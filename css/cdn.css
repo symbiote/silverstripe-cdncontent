@@ -1,0 +1,9 @@
+ul.optionset.checkboxset {
+	height: 150px;
+	overflow: auto;
+}
+
+ul.optionset.checkboxset li {
+	float: none;
+	width: 100%;
+}

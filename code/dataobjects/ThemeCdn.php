@@ -16,7 +16,7 @@ class ThemeCdn extends DataObject {
 		'Files'				=> 'MultiValueField',
 		
 	);
-	
+
 	public static $summary_fields = array(
 		'Title',
 		'Theme',

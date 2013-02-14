@@ -32,7 +32,7 @@ class CDNFolder extends DataExtension {
 			$fields->push(new DropdownField('StoreInCDN', 'Store content in CDN', $stores));
 		}
 	}
-	
+
 	public function getCDNWriter() {
 		$stores = $this->contentService->getStoreTypes();
 		if ($stores && isset($stores[$this->owner->StoreInCDN])) {

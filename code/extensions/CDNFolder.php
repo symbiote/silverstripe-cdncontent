@@ -8,11 +8,11 @@
  */
 class CDNFolder extends DataExtension {
 	
-	public static $db = array(
+	private static $db = array(
 		'StoreInCDN'		=> 'Varchar',
 	);
 
-	public static $dependencies = array(
+	private static $dependencies = array(
 		'contentService'		=> '%$ContentService',
 	);
 

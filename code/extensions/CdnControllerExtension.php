@@ -10,7 +10,7 @@ class CdnControllerExtension extends Extension {
 
 	static $store_type = 'File';
 	
-	public static $dependencies = array(
+	private static $dependencies = array(
 		'contentDelivery'		=> '%$ContentDeliveryService',
 		'contentService'		=> '%$ContentService',
 	);
@@ -30,7 +30,7 @@ class CdnControllerExtension extends Extension {
 	}
 	
 	public function CDNPath($assetPath, $uploadMissing = false) {
-		if (Director::isLive()) {
+		if (Director::isLive() || (isset($_GET['stage']) && $_GET['stage'] == 'Live')) {
 			$reader = $this->contentService->findReaderFor(self::$store_type, $assetPath);
 			if ($reader && $reader->isReadable()) {
 				return $reader->getURL();

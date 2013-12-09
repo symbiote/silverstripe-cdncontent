@@ -7,9 +7,10 @@
  * @license BSD License http://silverstripe.org/bsd-license/
  */
 class ThemeCdn extends DataObject {
-	public static $db = array(
+	private static $db = array(
 		'Title'				=> 'Varchar',
 		'Theme'				=> 'Varchar',
+		'StoreIn'			=> 'Varchar',			// identifier of the CDN to store content into
 		'LastSync'			=> 'SS_Datetime',
 		'SyncNow'			=> 'Boolean',
 		'ForceResync'		=> 'Boolean',
@@ -17,20 +18,20 @@ class ThemeCdn extends DataObject {
 		
 	);
 
-	public static $summary_fields = array(
+	private static $summary_fields = array(
 		'Title',
 		'Theme',
 		'LastSync',
 	);
 	
-	public static $searchable_fields = array(
+	private static $searchable_fields = array(
 		'Title'
 	);
 	
-	public static $dependencies = array(
+	private static $dependencies = array(
 		'contentDelivery'		=> '%$ContentDeliveryService',
 	);
-	
+
 	public $contentDelivery;
 
 	public function getCMSFields() {

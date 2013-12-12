@@ -1,0 +1,18 @@
+{
+	"name": "silverstripe/cdncontent",
+	"description": "A module that uses the content-services module for mapping Files and/or theme content from the CMS to compatible CDNs.",
+	"type": "silverstripe-module",
+	"keywords": ["silverstripe", "file", "themes", "cdn"],
+	"license": "BSD-3-Clause",
+	"authors": [
+	{
+		"name": "Marcus Nyeholt",
+		"email": "marcus@silverstripe.com.au"
+	}
+	],
+	"require":
+	{
+		"silverstripe/content-services": "*",
+		"silverstripe/multivaluefield": "dev-master"
+	}
+}

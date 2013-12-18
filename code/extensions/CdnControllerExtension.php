@@ -10,29 +10,49 @@ class CdnControllerExtension extends Extension {
 
 	static $store_type = 'File';
 	
-	private static $dependencies = array(
-		'contentDelivery'		=> '%$ContentDeliveryService',
-		'contentService'		=> '%$ContentService',
-	);
+	/**
+	 *
+	 * @var ContentDeliveryService
+	 */
+	public $contentDelivery;
+	
+	/**
+	 *
+	 * @var ContentService 
+	 */
+	public $contentService;
+	
+	protected $currentCdn;
 
-	public function requireCDN($assetPath, $uploadMissing = false) {
+	public function requireCDN($assetPath, $uploadMissing = false, $verify = false) {
 		// return the cdn URL for the given asset
 		$type = strpos($assetPath, '.css')  ? 'css' : 'js';
 		switch ($type) {
 			case 'css': 
-				Requirements::css($this->CDNPath($assetPath, $uploadMissing));
+				Requirements::css($this->CDNPath($assetPath, $uploadMissing, $verify));
 				break;
 			case 'js': 
-				Requirements::javascript($this->CDNPath($assetPath, $uploadMissing));
+				Requirements::javascript($this->CDNPath($assetPath, $uploadMissing, $verify));
 				break;
 		}
 		
 	}
 	
-	public function CDNPath($assetPath, $uploadMissing = false) {
-		if (Director::isLive() || (isset($_GET['stage']) && $_GET['stage'] == 'Live')) {
-			$reader = $this->contentService->findReaderFor(self::$store_type, $assetPath);
-			if ($reader && $reader->isReadable()) {
+	public function currentThemeCdn() {
+		if (!$this->currentCdn) {
+			$this->currentCdn = $this->contentDelivery->getCdnForTheme(Config::inst()->get('SSViewer', 'theme'));
+		}
+		
+		return $this->currentCdn;
+	}
+
+	public function CDNPath($assetPath, $uploadMissing = false, $verify = false) {
+		$current = $this->currentThemeCdn();
+		if ($current && (Director::isLive() || (isset($_GET['stage']) && $_GET['stage'] == 'Live'))) {
+			$store = $current->StoreIn;
+			
+			$reader = $this->contentService->findReaderFor($store, $assetPath);
+			if ($reader && (!$verify || $reader->exists())) {
 				return $reader->getURL();
 			}
 
@@ -47,7 +67,7 @@ class CdnControllerExtension extends Extension {
 						return $assetPath;
 					}
 					// upload all references too
-					return $this->contentDelivery->storeThemeFile($fullPath, false, true);
+					return $this->contentDelivery->storeThemeFile($current->Theme, $fullPath, false, true);
 				}
 
 				// otherwise just upload
@@ -65,9 +85,10 @@ class CdnControllerExtension extends Extension {
 	 * @return ContentWriter
 	 */
 	protected function getWriter() {
-		$writer = $this->contentService->getWriter(self::$store_type);
+		$current = $this->currentThemeCdn();
+		$writer = $this->contentService->getWriter($current->StoreIn);
 		if (!$writer) {
-			throw new Exception("Invalid writer type " . self::$store_type);
+			throw new Exception("Invalid writer type " . $current->StoreIn);
 		}
 		return $writer;
 	}

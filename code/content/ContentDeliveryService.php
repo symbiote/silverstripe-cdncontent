@@ -7,13 +7,6 @@
  * @license BSD License http://silverstripe.org/bsd-license/
  */
 class ContentDeliveryService {
-	
-	/**
-	 * A the type of content store to use
-	 * 
-	 * @var string
-	 */
-	protected $storeIn = 'File';
 
 	/**
 	 * @var ContentService
@@ -24,9 +17,16 @@ class ContentDeliveryService {
 	public static $dependencies = array(
 		'contentService'		=> '%$ContentService'
 	);
-
-	public function setStoreIn($v) {
-		$this->storeIn = $v;
+	
+	/**
+	 * Get the first available CDN for a given theme
+	 * 
+	 * @param string $theme
+	 * @return ThemeCdn
+	 */
+	public function getCdnForTheme($theme) {
+		$cdn = ThemeCdn::get()->filter('Theme', $theme);
+		return $cdn->first();
 	}
 	
 	/**
@@ -39,13 +39,13 @@ class ContentDeliveryService {
 	 * @param string $folder
 	 * @param boolean $processReferences 
 	 */
-	public function storeThemeFile($file, $forceUpdate = false, $processReferences = false) {
+	public function storeThemeFile($toCdn, $file, $forceUpdate = false, $processReferences = false) {
 		$relativeName = trim(str_replace(Director::baseFolder(), '', $file), '/');
 		
 		if (!$forceUpdate) {
 			// see if the file already exists, if not we do NOT do an update
-			$reader = $this->contentService->findReaderFor($this->storeIn, $relativeName);
-			if ($reader) {
+			$reader = $this->contentService->findReaderFor($toCdn, $relativeName);
+			if ($reader && $reader->exists()) {
 				return $reader->getURL();
 			}
 		}
@@ -57,7 +57,7 @@ class ContentDeliveryService {
 		}
 
 		// otherwise, lets get a content writer
-		$writer = $this->contentService->getWriter($this->storeIn);
+		$writer = $this->contentService->getWriter($toCdn);
 		try {
 			$writer->write($file, $relativeName);
 		} catch (Exception $e) {

@@ -1,0 +1,12 @@
+---
+Name: cdnservices
+---
+Injector:
+  ThemeCdn:
+    properties:
+      contentDelivery: %$ContentDeliveryService
+      contentService: %$ContentService
+  CdnControllerExtension:
+    properties:
+      contentDelivery: %$ContentDeliveryService
+      contentService: %$ContentService

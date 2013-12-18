@@ -27,12 +27,16 @@ class ThemeCdn extends DataObject {
 	private static $searchable_fields = array(
 		'Title'
 	);
-	
-	private static $dependencies = array(
-		'contentDelivery'		=> '%$ContentDeliveryService',
-	);
 
+	/**
+	 * @var ContentDeliveryService
+	 */
 	public $contentDelivery;
+	
+	/**
+	 * @var ContentService
+	 */
+	public $contentService;
 
 	public function getCMSFields() {
 		$fields = parent::getCMSFields();
@@ -50,6 +54,13 @@ class ThemeCdn extends DataObject {
 			$fields->replaceField('Files', new MultiValueCheckboxField('Files', _t('ThemeCdn.FILES', 'Files'), $this->getThemeFiles()));
 		}
 		
+		$stores = $this->contentService->getStoreTypes();
+		if (count($stores)) {
+			$default = array('' => 'No CDN');
+			$stores = array_merge($default, array_combine(array_keys($stores), array_keys($stores)));
+			$fields->replaceField('StoreIn', DropdownField::create('StoreIn', 'CDN', $stores));
+		}
+		
 		return $fields;
 	}
 	
@@ -65,7 +76,7 @@ class ThemeCdn extends DataObject {
 	public function sync() {
 		if ($this->Files && count($this->Files)) {
 			foreach ($this->Files->getValues() as $file) {
-				$this->contentDelivery->storeThemeFile($file, $this->ForceResync, strpos($file, '.css') > 0);
+				$this->contentDelivery->storeThemeFile($this->StoreIn, $file, $this->ForceResync, strpos($file, '.css') > 0);
 			}
 		}
 

@@ -51,6 +51,11 @@ class CdnControllerExtension extends Extension {
 		if ($current && (Director::isLive() || (isset($_GET['stage']) && $_GET['stage'] == 'Live'))) {
 			$store = $current->StoreIn;
 			
+			// if we want to upload missing files, verify their existence. 
+			if (!$verify && $uploadMissing) {
+				$verify = true;
+			}
+			
 			$reader = $this->contentService->findReaderFor($store, $assetPath);
 			if ($reader && (!$verify || $reader->exists())) {
 				return $reader->getURL();

@@ -53,7 +53,7 @@ class ContentDeliveryService {
 		$clear = false;
 		if ($processReferences) {
 			$clear = true;
-			$file = $this->processFileReferences($file, $forceUpdate);
+			$file = $this->processFileReferences($toCdn, $file, $forceUpdate);
 		}
 
 		// otherwise, lets get a content writer
@@ -72,7 +72,7 @@ class ContentDeliveryService {
 		return $writer->getReader()->getURL();
 	}
 	
-	protected function processFileReferences($file, $forceUpdate = false) {
+	protected function processFileReferences($toCdn, $file, $forceUpdate = false) {
 		$content = file_get_contents($file);
 		
 		$processed = array();
@@ -98,7 +98,7 @@ class ContentDeliveryService {
 					continue;
 				}
 
-				$replacement = $this->storeThemeFile($realPath, $forceUpdate);
+				$replacement = $this->storeThemeFile($toCdn, $realPath, $forceUpdate);
 				
 				$content = str_replace($segment, $replacement, $content);
 				$processed[$segment] = $replacement;

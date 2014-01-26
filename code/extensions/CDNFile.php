@@ -6,21 +6,72 @@
  * @license BSD License http://www.silverstripe.org/bsd-license
  */
 class CDNFile extends DataExtension {
-	public static $db = array(
+	private static $db = array(
 		'CDNFile'			=> 'FileContent'
 	);
+	
+	private static $dependencies = array(
+		'contentService'		=> '%$ContentService',
+	);
 
-	public function onBeforeWrite() {
-		parent::onBeforeWrite();
-		
-		if ($this->owner->ParentID && $this->owner->Parent()->StoreInCDN && !($this->owner instanceof Folder)) {
-			$path = $this->owner->getFullPath();
-			if (strlen($path) && is_file($path) && file_exists($path)) {
-				$writer = $this->owner->Parent()->getCDNWriter();
-				$writer->write($this->owner->getFullPath(), $this->owner->getFullPath());
-				// writer should now have an id
-				$this->owner->CDNFile = $writer->getContentId();
-			}
+	/**
+	 *
+	 * @var ContentService
+	 */
+	public $contentService;
+	
+	/**
+	 * @return ContentReader
+	 */
+	public function reader() {
+		$pointer = $this->owner->obj('CDNFile');
+		if ($pointer && $pointer->getValue()) {
+			return $pointer->getReader();
+		}
+	}
+
+	/**
+	 * @return ContentWriter
+	 */
+	public function writer() {
+		if ($reader = $this->reader()) {
+			return $reader->getWriter();
+		}
+
+		if ($this->owner->ParentID) {
+			$writer = $this->owner->Parent()->getCDNWriter();
+			return $writer;
+		}
+	}
+	
+	/**
+	 * Return the CDN store that this file should be stored into, based on its
+	 * parent setting
+	 */
+	public function targetStore() {
+		if ($this->owner->ParentID) {
+			$store = $this->owner->Parent()->StoreInCDN;
+			return $store;
+		}
+	}
+
+	/**
+	 * Update the URL used for a file in various locations
+	 * 
+	 * @param type $url
+	 * @return null
+	 */
+	public function updateURL(&$url) {
+		if($this->owner instanceof \Image_Cached) {
+			return;
+		}
+
+		/** @var \FileContent $pointer */
+		$pointer = $this->owner->obj('CDNFile');
+
+		if($pointer->exists()) {
+			$reader = $this->reader();
+			$url = $reader->getURL();
 		}
 	}
 
@@ -30,6 +81,26 @@ class CDNFile extends DataExtension {
 			if ($obj) {
 				$writer = $obj->getReader()->getWriter();
 				$writer->delete();
+			}
+		}
+	}
+
+	/**
+	 * Upload this content asset to the configured CDN
+	 */
+	public function uploadToContentService() {
+		if ($this->owner->ParentID && $this->owner->Parent()->StoreInCDN && !($this->owner instanceof Folder)) {
+			/** @var \File $file */
+			$file = $this->owner;
+
+			$path = $this->owner->getFullPath();
+			if (strlen($path) && is_file($path) && file_exists($path)) {
+				$writer = $this->writer();
+				// $writer->write($this->owner->getFullPath(), $this->owner->getFullPath());
+				$writer->write(fopen($file->getFullPath(), 'r'), $file->getFilename());
+
+				// writer should now have an id
+				$file->CDNFile = $writer->getContentId();
 			}
 		}
 	}

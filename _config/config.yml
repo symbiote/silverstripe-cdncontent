@@ -1,0 +1,49 @@
+---
+Name: cdnservices
+---
+Injector:
+  ThemeCdn:
+    properties:
+      contentDelivery: %$ContentDeliveryService
+      contentService: %$ContentService
+  CdnControllerExtension:
+    properties:
+      contentDelivery: %$ContentDeliveryService
+      contentService: %$ContentService
+      
+---
+name: extensions
+---
+
+Image_Cached:
+  extensions:
+    - SilverStripeAustralia\ContentServiceAssets\ImageCachedExtension
+
+Upload:
+  extensions:
+    - SilverStripeAustralia\ContentServiceAssets\UploadExtension
+
+---
+name: injector
+---
+
+Injector:
+  SilverStripeAustralia\ContentServiceAssets\ImageCachedExtension:
+    constructor:
+      - %$ContentService
+#  SilverStripeAustralia\ContentServiceAssets\RequirementsBackend:
+#    constructor:
+#      - %$content_services_integration.service
+  SilverStripeAustralia\ContentServiceAssets\VersionedFileExtension:
+    constructor:
+      - %$ContentService
+
+---
+name: versioned_files
+only:
+  moduleexists: versionedfiles
+---
+
+File:
+  extensions:
+    - SilverStripeAustralia\ContentServiceAssets\VersionedFileExtension

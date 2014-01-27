@@ -35,9 +35,8 @@ class CdnControllerExtension extends Extension {
 				Requirements::javascript($this->CDNPath($assetPath, $uploadMissing, $verify));
 				break;
 		}
-		
 	}
-	
+
 	public function currentThemeCdn() {
 		if (!$this->currentCdn) {
 			$this->currentCdn = $this->contentDelivery->getCdnForTheme(Config::inst()->get('SSViewer', 'theme'));

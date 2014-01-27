@@ -51,9 +51,9 @@ class ThemeCdn extends DataObject {
 		
 		if ($this->Theme) {
 			// $fields->addFieldToTab('Root.Main', new MultiValue
-			$fields->replaceField('Files', new MultiValueCheckboxField('Files', _t('ThemeCdn.FILES', 'Files'), $this->getThemeFiles()));
+			$fields->replaceField('Files', MultiValueCheckboxField::create('Files', _t('ThemeCdn.FILES', 'Files'), $this->getThemeFiles()));
 		}
-		
+
 		$stores = $this->contentService->getStoreTypes();
 		if (count($stores)) {
 			$default = array('' => 'No CDN');
@@ -66,6 +66,18 @@ class ThemeCdn extends DataObject {
 	
 	public function onBeforeWrite() {
 		parent::onBeforeWrite();
+		
+		if ($this->Files) {
+			$files = $this->Files->getValues();
+			foreach ($files as $file) {
+				// make sure we're a safe name
+				$file = realpath($this->themeBase() . '/' . $file);
+				if (!file_exists($file)) {
+					throw new Exception("Invalid, possibly malicious, file reference $file");
+				}
+			}
+		}
+		
 		if ($this->SyncNow) {
 			$this->sync();
 		}
@@ -76,7 +88,8 @@ class ThemeCdn extends DataObject {
 	public function sync() {
 		if ($this->Files && count($this->Files)) {
 			foreach ($this->Files->getValues() as $file) {
-				$this->contentDelivery->storeThemeFile($this->StoreIn, $file, $this->ForceResync, strpos($file, '.css') > 0);
+				$full = realpath($this->themeBase() . '/' . $file);
+				$this->contentDelivery->storeThemeFile($this->StoreIn, $full, $this->ForceResync, strpos($full, '.css') > 0);
 			}
 		}
 
@@ -85,19 +98,24 @@ class ThemeCdn extends DataObject {
 	}
 	
 	public function getThemeFiles($theme = null) {
-		if (!$theme) {
-			$theme = $this->Theme;
-		}
-		$base = Director::baseFolder() . '/' . THEMES_DIR . '/' . $theme;
+		$base = $this->themeBase($theme);
 
 		$fileList = array();
 		if (is_dir($base)) {
 			$files = glob($base . '/*/*');
 			foreach ($files as $file) {
+				$file = str_replace($base .'/', '', $file);
 				$fileList[$file] = $file;
 			}
 		}
 		
 		return $fileList;
+	}
+	
+	protected function themeBase($theme = null) {
+		if (!$theme) {
+			$theme = $this->Theme;
+		}
+		return Director::baseFolder() . '/' . THEMES_DIR . '/' . $theme;
 	}
 }

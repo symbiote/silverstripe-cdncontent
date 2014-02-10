@@ -85,6 +85,15 @@ class CDNFile extends DataExtension {
 		}
 	}
 
+	public function downloadFromContentService() {
+		/** @var \FileContent $pointer */
+		$pointer = $this->owner->obj('CDNFile');
+
+		if ($pointer->exists()) {
+			file_put_contents($this->owner->getFullPath(), $pointer->getReader()->read());
+		}
+	}
+
 	/**
 	 * Upload this content asset to the configured CDN
 	 */

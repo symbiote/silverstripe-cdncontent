@@ -10,11 +10,10 @@ Injector:
     properties:
       contentDelivery: %$ContentDeliveryService
       contentService: %$ContentService
-      
+
 ---
 name: extensions
 ---
-
 Image_Cached:
   extensions:
     - SilverStripeAustralia\ContentServiceAssets\ImageCachedExtension
@@ -26,14 +25,15 @@ Upload:
 ---
 name: injector
 ---
-
 Injector:
+  SilverStripeAustralia\ContentServiceAssets\ImageBackend:
+    factory: SilverStripeAustralia\ContentServiceAssets\ImageBackendFactory
+  SilverStripeAustralia\ContentServiceAssets\ImageBackendFactory:
+    constructor:
+      - "GDBackend"
   SilverStripeAustralia\ContentServiceAssets\ImageCachedExtension:
     constructor:
       - %$ContentService
-#  SilverStripeAustralia\ContentServiceAssets\RequirementsBackend:
-#    constructor:
-#      - %$content_services_integration.service
   SilverStripeAustralia\ContentServiceAssets\VersionedFileExtension:
     constructor:
       - %$ContentService
@@ -43,7 +43,6 @@ name: versioned_files
 only:
   moduleexists: versionedfiles
 ---
-
 File:
   extensions:
     - SilverStripeAustralia\ContentServiceAssets\VersionedFileExtension

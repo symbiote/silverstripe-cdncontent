@@ -79,8 +79,13 @@ class CDNFile extends DataExtension {
 		if ($this->owner->ParentID && $this->owner->Parent()->StoreInCDN && !($this->owner instanceof Folder)) {
 			$obj = $this->owner->obj('CDNFile');
 			if ($obj) {
-				$writer = $obj->getReader()->getWriter();
-				$writer->delete();
+				try {
+					$writer = $obj->getReader()->getWriter();
+					$writer->delete();
+				} catch (Exception $ex) {
+					// not much that can be done really?
+					SS_Log::log($ex, SS_Log::WARN);
+				}
 			}
 		}
 	}

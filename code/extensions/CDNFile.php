@@ -118,7 +118,18 @@ class CDNFile extends DataExtension {
 		if ($file = $this->owner->obj('CDNFile')) {
 			if (strlen($file->getValue())) {
 				$url = $file->URL();
-				$fields->addFieldToTab('Root.Main', new LiteralField('CDNUrl', sprintf('<a href="%s" target="_blank">%s</a>', $url, $url)));
+				$link = ReadonlyField::create('CDNUrl', 'CDN link',  sprintf('<a href="%s" target="_blank">%s</a>', $url, $url));
+				$link->dontEscape = true;
+				
+				if ($top = $fields->fieldByName('Root.Main.FilePreview')) {
+					$field = $top->fieldByName('FilePreviewData');
+					$holder = $field->fieldByName('');
+					if ($holder) {
+						$holder->push($link);
+					}
+				} else {
+					$fields->addFieldToTab('Root.Main', $link);
+				}
 			}
 		}
 	}

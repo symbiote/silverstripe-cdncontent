@@ -14,3 +14,4 @@ Provides a few CDN related pieces of functionality
 ## Requirements
 
 * Content Services module https://github.com/nyeholt/silverstripe-content-services/
+* Patches to the framework folder - see gist at https://gist.github.com/nyeholt/8642905

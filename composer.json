@@ -12,7 +12,7 @@
 	],
 	"require":
 	{
-		"silverstripe/content-services": "*",
+		"silverstripe/content-services": "1.0.x-dev",
 		"silverstripe/multivaluefield": "dev-master"
 	}
 }

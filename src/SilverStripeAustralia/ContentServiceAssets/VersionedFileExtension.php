@@ -23,6 +23,10 @@ class VersionedFileExtension extends \DataExtension {
 		if(!$this->owner->isChanged('CurrentVersionID')) {
 			return;
 		}
+		
+		if (!$this->owner->hasExtension('CDNFile')) {
+			return;
+		}
 
 		// If there's only a single version, it must have just been created.
 		if(count($this->owner->Versions()) == 1) {

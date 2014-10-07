@@ -50,7 +50,7 @@ class CDNFile extends DataExtension {
 	 */
 	public function targetStore() {
 		if ($this->owner->ParentID) {
-			$store = $this->owner->Parent()->StoreInCDN;
+			$store = $this->owner->Parent()->getCDNStore();
 			return $store;
 		}
 	}
@@ -76,7 +76,7 @@ class CDNFile extends DataExtension {
 	}
 
 	public function onAfterDelete() {
-		if ($this->owner->ParentID && $this->owner->Parent()->StoreInCDN && !($this->owner instanceof Folder)) {
+		if ($this->owner->ParentID && $this->owner->Parent()->getCDNStore() && !($this->owner instanceof Folder)) {
 			$obj = $this->owner->obj('CDNFile');
 			if ($obj) {
 				try {
@@ -88,6 +88,10 @@ class CDNFile extends DataExtension {
 				}
 			}
 		}
+	}
+	
+	public function onAfterUpload() {
+		$this->uploadToContentService();
 	}
 
 	public function downloadFromContentService() {
@@ -103,7 +107,7 @@ class CDNFile extends DataExtension {
 	 * Upload this content asset to the configured CDN
 	 */
 	public function uploadToContentService() {
-		if ($this->owner->ParentID && $this->owner->Parent()->StoreInCDN && !($this->owner instanceof Folder)) {
+		if ($this->owner->ParentID && $this->owner->Parent()->getCDNStore() && !($this->owner instanceof Folder)) {
 			/** @var \File $file */
 			$file = $this->owner;
 
@@ -121,6 +125,7 @@ class CDNFile extends DataExtension {
 
 	public function updateCMSFields(\FieldList $fields) {
 		if ($file = $this->owner->obj('CDNFile')) {
+			$v = $file->getValue();
 			if (strlen($file->getValue())) {
 				$url = $file->URL();
 				$link = ReadonlyField::create('CDNUrl', 'CDN link',  sprintf('<a href="%s" target="_blank">%s</a>', $url, $url));

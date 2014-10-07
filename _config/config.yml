@@ -17,10 +17,10 @@ name: extensions
 Image_Cached:
   extensions:
     - SilverStripeAustralia\ContentServiceAssets\ImageCachedExtension
-
-Upload:
-  extensions:
-    - SilverStripeAustralia\ContentServiceAssets\UploadExtension
+#
+#Upload:
+#  extensions:
+#    - SilverStripeAustralia\ContentServiceAssets\UploadExtension
 
 ---
 name: injector

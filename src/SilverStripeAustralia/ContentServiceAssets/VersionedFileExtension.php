@@ -8,22 +8,32 @@ use RegexIterator;
 use UnexpectedValueException;
 
 /**
- * Changes the external content file when the version is changed.
+ * Changes the external content file when the version is changed, and
+ * ensures resampled files are deleted from the remote so that they're
+ * correctly regenerated later
  */
 class VersionedFileExtension extends \DataExtension {
 
 	private $service;
+	
+	private $cachedPaths;
 
 	public function __construct(ContentService $service) {
 		$this->service = $service;
 		parent::__construct();
 	}
-
+	
 	public function onAfterWrite() {
-		if(!$this->owner->isChanged('CurrentVersionID')) {
-			return;
-		}
+		parent::onAfterWrite();
 		
+		// figure out which files we need to regenerate (or at least delete to allow for regeneration
+		// as Image will  call deleteFormattedImages during onAfterUpload which means the
+		// updates below do NOT get triggered correctly
+		$this->cachedPaths = $this->findCachedPaths();
+		
+	}
+
+	public function onAfterUpload() {
 		if (!$this->owner->hasExtension('CDNFile')) {
 			return;
 		}
@@ -33,8 +43,34 @@ class VersionedFileExtension extends \DataExtension {
 			return;
 		}
 
-		$this->owner->uploadToContentService();
 		$this->uploadCachedImages();
+	}
+	
+	protected function findCachedPaths() {
+		$store = $this->owner->targetStore();
+		if (!$store) {
+			return;
+		}
+		$iterator = null;
+		$dir = dirname($this->owner->getFullPath()) . '/_resampled';
+
+		try {
+			$iterator = new DirectoryIterator($dir);
+		} catch(UnexpectedValueException $e) {
+			return;
+		}
+
+		$regex = sprintf('/([a-z]+)([0-9]?[0-9a-f]*)-%s/i', preg_quote($this->owner->Name, '/'));
+		$iterator = new RegexIterator($iterator, $regex, RegexIterator::MATCH);
+		$cached = array();
+		foreach($iterator as $item) {
+			$fullPath = "$dir/$item";
+			$path = dirname($this->owner->getFilename()).'/_resampled/' . $item;
+			
+			$cached[] = "$item";
+		}
+		
+		return $cached;
 	}
 
 	protected function uploadCachedImages() {
@@ -53,11 +89,26 @@ class VersionedFileExtension extends \DataExtension {
 
 		$regex = sprintf('/([a-z]+)([0-9]?[0-9a-f]*)-%s/i', preg_quote($this->owner->Name, '/'));
 		$iterator = new RegexIterator($iterator, $regex, RegexIterator::MATCH);
-
-		foreach($iterator as $item) {
+		
+		if (!$this->cachedPaths || count($this->cachedPaths) === 0) {
+			return;
+		}
+		foreach ($this->cachedPaths as $item) {
 			$fullPath = "$dir/$item";
 			$path = dirname($this->owner->getFilename()).'/_resampled/' . $item;
 			$asset = ContentServiceAsset::get()->filter('Filename', $path)->first();
+			
+			if (!file_exists($fullPath) && $asset) {
+				// delete the remote
+				$writer = $this->service->getWriterFor($asset, 'FilePointer', $store);
+				$writer->delete();
+				$asset->delete();
+				continue;
+			}
+			
+			if (!file_exists($fullPath)) {
+				continue;
+			}
 
 			if(!$asset) {
 				$asset = new ContentServiceAsset();
@@ -72,5 +123,6 @@ class VersionedFileExtension extends \DataExtension {
 				$asset->write();
 			}
 		}
+
 	}
 }

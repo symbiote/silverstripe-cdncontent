@@ -25,7 +25,7 @@ class CDNFolder extends DataExtension {
 
 		$stores = $this->contentService->getStoreTypes();
 		if (count($stores)) {
-			$default = array('' => 'No CDN');
+			$default = array('' => 'Inherit');
 			$stores = array_merge($default, array_combine(array_keys($stores), array_keys($stores)));
 			$fields->push(new DropdownField('StoreInCDN', 'Store content in CDN', $stores));
 		}
@@ -33,8 +33,21 @@ class CDNFolder extends DataExtension {
 
 	public function getCDNWriter() {
 		$stores = $this->contentService->getStoreTypes();
-		if ($stores && isset($stores[$this->owner->StoreInCDN])) {
-			return $this->contentService->getWriter($this->owner->StoreInCDN);
+		if ($stores && isset($stores[$this->getCDNStore()])) {
+			return $this->contentService->getWriter($this->getCDNStore());
+		}
+	}
+	
+	/**
+	 * Get the CDN store that this item should be stored in
+	 */
+	public function getCDNStore() {
+		if ($this->owner->StoreInCDN) {
+			return $this->owner->StoreInCDN;
+		}
+
+		if ($this->owner->ParentID) {
+			return $this->owner->Parent()->getCDNStore();
 		}
 	}
 }

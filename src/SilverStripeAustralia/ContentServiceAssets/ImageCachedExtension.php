@@ -17,8 +17,8 @@ class ImageCachedExtension extends \DataExtension {
 	}
 
 	public function updateURL(&$url) {
-		/** @var \Image_Cached $cached */
 		$cached = $this->owner;
+		/** @var \Image_Cached $cached */
 		$filename = $cached->getFilename();
 		
 		$storeIn = $this->owner->targetStore();

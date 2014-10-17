@@ -71,7 +71,9 @@ class CDNFile extends DataExtension {
 
 		if($pointer->exists()) {
 			$reader = $this->reader();
-			$url = $reader->getURL();
+			if ($reader) {
+				$url = $reader->getURL();
+			}
 		}
 	}
 

@@ -20,12 +20,6 @@ class CDNFile extends DataExtension {
 	 */
 	public $contentService;
 	
-	public function onBeforeWrite() {
-		if ($this->owner instanceof Image && $this->owner->ClassName == 'Image') {
-			$this->owner->ClassName = 'CdnImage';
-		}
-	}
-	
 	/**
 	 * @return ContentReader
 	 */
@@ -127,6 +121,7 @@ class CDNFile extends DataExtension {
 
 				// writer should now have an id
 				$file->CDNFile = $writer->getContentId();
+				$file->write();
 			}
 		}
 	}

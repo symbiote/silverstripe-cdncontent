@@ -46,3 +46,14 @@ only:
 File:
   extensions:
     - SilverStripeAustralia\ContentServiceAssets\VersionedFileExtension
+
+---
+Name: cdn_image_settings
+---
+File:
+  class_for_file_extension: 
+    jpg: CdnImage
+    jpeg: CdnImage
+    png: CdnImage
+    gif: CdnImage
+    bmp: CdnImage

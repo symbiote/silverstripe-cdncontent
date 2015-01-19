@@ -116,7 +116,8 @@ class VersionedFileExtension extends \DataExtension {
 			}
 
 			$writer = $this->service->getWriterFor($asset, 'FilePointer', $store);
-			$writer->write(fopen($fullPath, 'r'), $path);
+			$mtime = @filemtime($path); 
+			$writer->write(fopen($fullPath, 'r'), $mtime . '/' . $path);
 			
 			if ($asset->ID <= 0) {
 				$asset->FilePointer = $writer->getContentId();

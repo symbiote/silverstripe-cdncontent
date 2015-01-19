@@ -40,7 +40,8 @@ class ContentDeliveryService {
 	 * @param boolean $processReferences 
 	 */
 	public function storeThemeFile($toCdn, $file, $forceUpdate = false, $processReferences = false) {
-		$relativeName = trim(str_replace(Director::baseFolder(), '', $file), '/');
+		$mtime = @filemtime($file);
+		$relativeName = $mtime . '/' . trim(str_replace(Director::baseFolder(), '', $file), '/');
 		
 		if (!$forceUpdate) {
 			// see if the file already exists, if not we do NOT do an update

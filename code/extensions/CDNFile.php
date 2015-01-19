@@ -109,15 +109,16 @@ class CDNFile extends DataExtension {
 	 * Upload this content asset to the configured CDN
 	 */
 	public function uploadToContentService() {
-		if ($this->owner->ParentID && $this->owner->Parent()->getCDNStore() && !($this->owner instanceof Folder)) {
+		$file = $this->owner;
+		if ($file->ParentID && $file->Parent()->getCDNStore() && !($file instanceof Folder)) {
 			/** @var \File $file */
-			$file = $this->owner;
-
-			$path = $this->owner->getFullPath();
+			
+			$path = $file->getFullPath();
 			if (strlen($path) && is_file($path) && file_exists($path)) {
 				$writer = $this->writer();
 				// $writer->write($this->owner->getFullPath(), $this->owner->getFullPath());
-				$writer->write(fopen($file->getFullPath(), 'r'), $file->getFilename());
+				$mtime = @filemtime($path);
+				$writer->write(fopen($file->getFullPath(), 'r'), $mtime . '/' . $file->getFilename());
 
 				// writer should now have an id
 				$file->CDNFile = $writer->getContentId();

@@ -101,7 +101,10 @@ class CDNFile extends DataExtension {
 		$pointer = $this->owner->obj('CDNFile');
 
 		if ($pointer->exists()) {
-			file_put_contents($this->owner->getFullPath(), $pointer->getReader()->read());
+			$reader = $pointer->getReader();
+			if ($reader) {
+				file_put_contents($this->owner->getFullPath(), $pointer->getReader()->read());
+			}
 		}
 	}
 

@@ -30,6 +30,6 @@ class CdnImage extends Image {
 			return $cached;
 		}
 
-		return parent::getFormattedImage($format);
+		return call_user_func_array('parent::getFormattedImage', $args);
 	}
 }

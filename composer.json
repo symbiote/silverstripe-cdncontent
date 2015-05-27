@@ -13,6 +13,6 @@
 	"require":
 	{
 		"silverstripe/content-services": "~1.1",
-		"silverstripe/multivaluefield": "dev-master"
+		"silverstripe/multivaluefield": "~2.0"
 	}
 }

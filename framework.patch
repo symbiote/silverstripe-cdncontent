@@ -1,0 +1,46 @@
+diff --git framework/filesystem/File.php framework/filesystem/File.php
+index 2830832..8f19d81 100644
+--- framework/filesystem/File.php
++++ framework/filesystem/File.php
+@@ -227,7 +227,7 @@ class File extends DataObject {
+ 	 * @return bool
+ 	 */
+ 	public function exists() {
+-		return parent::exists() && file_exists($this->getFullPath());
++		return parent::exists(); //  && file_exists($this->getFullPath());
+ 	}
+ 
+ 	/**
+@@ -710,7 +710,9 @@ class File extends DataObject {
+ 	 * @return string
+ 	 */
+ 	public function getURL() {
+-		return Controller::join_links(Director::baseURL(), $this->getFilename());
++		$url = Controller::join_links(Director::baseURL(), $this->getFilename());
++        $this->extend('updateURL', $url);
++        return $url;
+ 	}
+ 
+ 	/**
+diff --git framework/forms/HtmlEditorField.php framework/forms/HtmlEditorField.php
+index 4bc987e..4c12319 100644
+--- framework/forms/HtmlEditorField.php
++++ framework/forms/HtmlEditorField.php
+@@ -94,7 +94,7 @@ class HtmlEditorField extends TextareaField {
+ 				if($width && $height && ($width != $image->getWidth() || $height != $image->getHeight())) {
+ 					//Make sure that the resized image actually returns an image:
+ 					$resized=$image->ResizedImage($width, $height);
+-					if($resized) $img->setAttribute('src', $resized->getRelativePath());
++					if($resized) $img->setAttribute('src', $resized->getURL());
+ 				}
+ 			}
+ 
+@@ -464,7 +464,7 @@ class HtmlEditorField_Toolbar extends RequestHandler {
+ 	protected function viewfile_getLocalFileByID($id) {
+ 		$file = DataObject::get_by_id('File', $id);
+ 
+-		if ($file && $file->canView()) return array($file, $file->RelativeLink());
++		if ($file && $file->canView()) return array($file, $file->getURL());
+ 		return array(null, null);
+ 	}
+ 

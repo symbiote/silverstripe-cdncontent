@@ -14,5 +14,10 @@
 	{
 		"silverstripe/content-services": "~1.1",
 		"silverstripe/multivaluefield": "~2.0"
+	},
+	"extra": {
+		"branch-alias": {
+			"dev-master": "1.2.x-dev"
+		}
 	}
 }

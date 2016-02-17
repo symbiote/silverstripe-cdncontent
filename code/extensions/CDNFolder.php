@@ -45,6 +45,10 @@ class CDNFolder extends DataExtension {
 		if ($this->owner->StoreInCDN) {
 			return $this->owner->StoreInCDN;
 		}
+		
+		if(!$this->owner->ID || $this->owner->ID === "root" || !$this->owner->ParentID) {
+			return $this->contentService->getDefaultStore();
+		}
 
 		if ($this->owner->ParentID) {
 			return $this->owner->Parent()->getCDNStore();

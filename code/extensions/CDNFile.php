@@ -40,8 +40,12 @@ class CDNFile extends DataExtension {
 
 		if ($this->owner->ParentID) {
 			$writer = $this->owner->Parent()->getCDNWriter();
-			return $writer;
+		} else {
+			//get dafault writer
+			$writer = $this->contentService->getWriter();
 		}
+
+		return $writer;
 	}
 	
 	/**
@@ -53,6 +57,8 @@ class CDNFile extends DataExtension {
 			$store = $this->owner->Parent()->getCDNStore();
 			return $store;
 		}
+
+		return $this->contentService->getDefaultStore();
 	}
 
 	/**
@@ -113,7 +119,7 @@ class CDNFile extends DataExtension {
 	 */
 	public function uploadToContentService() {
 		$file = $this->owner;
-		if ($file->ParentID && $file->Parent()->getCDNStore() && !($file instanceof Folder)) {
+		if (!$file instanceof Folder) {
 			/** @var \File $file */
 			
 			$path = $file->getFullPath();

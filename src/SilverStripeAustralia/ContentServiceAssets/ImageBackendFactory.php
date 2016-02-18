@@ -24,7 +24,7 @@ class ImageBackendFactory implements Factory {
 	public function create($service, array $params = array()) {
 		$path = $params[0];
 
-		if (!file_exists($path)) {
+		if (!file_exists($path) || filesize($path) == 0) {
 			$filename = Director::makeRelative($path);
 			$file = File::find(trim($filename, '/'));
 

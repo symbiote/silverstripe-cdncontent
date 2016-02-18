@@ -103,7 +103,9 @@ class CDNFile extends DataExtension {
 		if ($pointer->exists()) {
 			$reader = $pointer->getReader();
 			if ($reader) {
-				file_put_contents($this->owner->getFullPath(), $pointer->getReader()->read());
+                $p = $this->owner->getFullPath();
+                Filesystem::makeFolder(dirname($p));
+				file_put_contents($p, $pointer->getReader()->read());
 			}
 		}
 	}

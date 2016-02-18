@@ -38,10 +38,12 @@ class CDNFile extends DataExtension {
 			return $reader->getWriter();
 		}
 
+		$writer = null;
+
 		if ($this->owner->ParentID) {
 			$writer = $this->owner->Parent()->getCDNWriter();
 		} else {
-			//get dafault writer
+			//get default writer
 			$writer = $this->contentService->getWriter();
 		}
 
@@ -50,7 +52,7 @@ class CDNFile extends DataExtension {
 	
 	/**
 	 * Return the CDN store that this file should be stored into, based on its
-	 * parent setting
+	 * parent setting, if no parent is found the ContentService default is returned
 	 */
 	public function targetStore() {
 		if ($this->owner->ParentID) {
@@ -119,21 +121,19 @@ class CDNFile extends DataExtension {
 	 */
 	public function uploadToContentService() {
 		$file = $this->owner;
-		if (!$file instanceof Folder) {
+		if (!$file instanceof Folder && $writer = $this->writer()) {
 			/** @var \File $file */
 			
 			$path = $file->getFullPath();
 			if (strlen($path) && is_file($path) && file_exists($path)) {
-				$writer = $this->writer();
+
 				// $writer->write($this->owner->getFullPath(), $this->owner->getFullPath());
 				$mtime = @filemtime($path);
-				if ($writer) {
-					$writer->write(fopen($file->getFullPath(), 'r'), $mtime . '/' . $file->getFilename());
+				$writer->write(fopen($file->getFullPath(), 'r'), $mtime . '/' . $file->getFilename());
 
-					// writer should now have an id
-					$file->CDNFile = $writer->getContentId();
-					$file->write();
-				}
+				// writer should now have an id
+				$file->CDNFile = $writer->getContentId();
+				$file->write();
 			}
 		}
 	}

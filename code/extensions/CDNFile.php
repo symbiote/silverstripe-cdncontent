@@ -71,7 +71,7 @@ class CDNFile extends DataExtension {
 	 */
 	public function updateURL(&$url) {
 		if($this->owner instanceof \Image_Cached) {
-			return;
+			return; /** handled in @link ImageCachedExtension */
 		}
 
 		/** @var \FileContent $pointer */
@@ -80,7 +80,42 @@ class CDNFile extends DataExtension {
 		if($pointer->exists()) {
 			$reader = $this->reader();
 			if ($reader) {
-				$url = $reader->getURL();
+				if ($this->owner->CanViewType) {
+					if($this->owner->hasMethod('canView') && !$this->owner->canView()) {
+						return;
+					} else {
+						$url  = $reader->getSecureURL();
+					}
+				} else {
+					$url = $reader->getURL();
+				}
+			}
+		}
+	}
+
+	/**
+	 * Return a secure url for the file. Currently we expect all secure urls are time limited but other limiting methods
+	 * nay be supported in the future
+	 *
+	 * @param type $url
+	 * @return null
+	 */
+	public function getSecureURL($expires = 60) {
+		if($this->owner instanceof \Image_Cached) {
+			return;
+		}
+
+		/** @var \FileContent $pointer */
+		$pointer = $this->owner->obj('CDNFile');
+
+		if($pointer->exists()) {
+			$reader = $this->reader();
+			if ($reader && $this->owner->CanViewType) {
+				if ($this->owner->hasMethod('canView') && !$this->owner->canView()) {
+					return; // OR Change URL to null incase the file is in assets?
+				} else {
+					return $reader->getSecureURL();
+				}
 			}
 		}
 	}

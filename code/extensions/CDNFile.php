@@ -113,7 +113,14 @@ class CDNFile extends DataExtension {
 			if ($reader) {
                 $p = $this->owner->getFullPath();
                 Filesystem::makeFolder(dirname($p));
-				file_put_contents($p, $pointer->getReader()->read());
+                try {
+                    file_put_contents($p, $pointer->getReader()->read());
+                } catch (Exception $ex) {
+                    // okay, make sure the local file is removed
+                    if (file_exists($p) && filesize($p) == 0) {
+                        unlink($p);
+                    }
+                }
 			}
 		}
 	}

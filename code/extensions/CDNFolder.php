@@ -15,7 +15,6 @@ class CDNFolder extends DataExtension {
 	);
 
 	/**
-	 *
 	 * @var ContentService
 	 */
 	public $contentService;
@@ -25,9 +24,15 @@ class CDNFolder extends DataExtension {
 
 		$stores = $this->contentService->getStoreTypes();
 		if (count($stores)) {
-			$default = array('' => 'Inherit');
-			$stores = array_merge($default, array_combine(array_keys($stores), array_keys($stores)));
-			$fields->push(new DropdownField('StoreInCDN', 'Store content in CDN', $stores));
+            if ($this->owner->ID) {
+                $default = array('' => 'Inherit');
+                $stores = array_merge($default, array_combine(array_keys($stores), array_keys($stores)));
+                $fields->push(new DropdownField('StoreInCDN', 'Store content in CDN', $stores));
+            } else {
+                if ($default = $this->contentService->getDefaultStore()) {
+                    $fields->push(LiteralField::create("DefaultStoreNote", sprintf(_t('CDNFolder.DEFAULT_NOTE', '<h3>Storing in %s</h3>'), $default)));
+                }
+            }
 		}
 	}
 

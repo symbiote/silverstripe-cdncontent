@@ -103,6 +103,23 @@ class CDNFile extends DataExtension {
 	public function onAfterUpload() {
 		$this->uploadToContentService();
 	}
+    
+    /**
+     * Ensures there's a local assets path to the required file
+     */
+    public function ensureLocalFile() {
+        if (!$this->localFileExists()) {
+			$this->downloadFromContentService();
+		}
+    }
+    
+    public function localFileExists() {
+        $path = $this->owner->getFullPath();
+        if (!file_exists($path) || filesize($path) == 0) {
+            return false;
+        }
+        return true;
+    }
 
 	public function downloadFromContentService() {
 		/** @var \FileContent $pointer */

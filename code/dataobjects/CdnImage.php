@@ -33,4 +33,15 @@ class CdnImage extends Image {
 
 		return call_user_func_array('parent::getFormattedImage', $args);
 	}
+    
+    public function getDimensions($dim = "string") {
+        $pointer = $this->obj('CDNFile');
+        if($this->ID && $this->Filename && $pointer->exists()) {
+            $this->ensureLocalFile();
+        }
+        
+        if ($this->localFileExists()) {
+            return parent::getDimensions($dim);
+        }
+    }
 }

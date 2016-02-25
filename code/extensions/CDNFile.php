@@ -74,6 +74,11 @@ class CDNFile extends DataExtension {
 			return; /** handled in @link ImageCachedExtension */
 		}
 
+        $controller = Controller::curr();
+        if ($controller instanceof CMSMain) {
+            return;
+        }
+
 		/** @var \FileContent $pointer */
 		$pointer = $this->owner->obj('CDNFile');
 
@@ -82,7 +87,8 @@ class CDNFile extends DataExtension {
 				if ($this->owner->getViewType() == 'Anyone') {
 					$url = $reader->getURL();
 				} else {
-					$url = $this->owner->getSecureControllerLink($this->owner->Filename);
+                    // force through access control
+					$url = $this->owner->getSecureControllerLink();
 				}
 			} else {
 				$url = $reader->getURL();
@@ -96,8 +102,12 @@ class CDNFile extends DataExtension {
 	 *
 	 * @return String link to S3SecureFileController endpoint
 	 */
-	public function getSecureControllerLink($ID) {
-		return BASE_URL . "/cdnassets/$ID";
+	public function getSecureControllerLink() {
+        $filename = $this->owner->Filename;
+        if (strpos($filename, 'assets') === 0) {
+            $filename = substr($filename, 7);
+        }
+		return "cdnassets/". $filename;
 	}
 
 	/**
@@ -134,14 +144,17 @@ class CDNFile extends DataExtension {
 	 */
 	public function getViewType() {
 
-		if ($this->owner instanceof Folder) {
+//		if ($this->owner instanceof Folder) {
 			if ($this->owner->CanViewType == 'Inherit') {
-					if ($this->owner->ParentID) return $this->owner->Parent()->getViewType();
-					else return $this->owner->defaultPermissions($member);
+					if ($this->owner->ParentID) {
+                        return $this->owner->Parent()->getViewType();
+                    } else {
+                        return $this->owner->defaultPermissions($member);
+                    }
 			} else {
 				return $this->owner->CanViewType;
 			}
-		}
+//		}
 
 		$default = Config::inst()->get('SecureAssets', 'Defaults');
 

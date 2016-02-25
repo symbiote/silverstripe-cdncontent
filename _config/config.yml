@@ -59,7 +59,9 @@ File:
 
 ---
 Name: cdn_routes
+After: '#secureassetsroutes'
 ---
 Director:
   rules:
-    'cdnassets/$ID': 'CDNSecureFileController'
+    'cdnassets': 'CDNSecureFileController'
+    'assets': 'CDNSecureFileController'

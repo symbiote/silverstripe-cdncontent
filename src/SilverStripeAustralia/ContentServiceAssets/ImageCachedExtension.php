@@ -54,17 +54,12 @@ class ImageCachedExtension extends \DataExtension {
 			$reader = $this->service->getReader($asset->FilePointer);
 
 			if ($reader) {
-				if ($this->owner->CanViewType) {
-					if($this->owner->hasMethod('canView') && !$this->owner->canView()) {
-						return;
-					} else {
-						$url  = $reader->getSecureURL();
-					}
-				} else {
-					$url = $reader->getURL();
-				}
+                if ($this->owner->CanViewType && $this->owner->getViewType() != 'Anyone') {
+                    $url = 'assets/__resampled/' . $filename;
+                } else {
+                    $url = $reader->getURL();
+                }
 			}
 		}
 	}
-
 }

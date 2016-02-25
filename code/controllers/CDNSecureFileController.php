@@ -7,6 +7,15 @@
  * @author Stephen McMahon <stephen@silverstripe.com.au>
  */
 class CDNSecureFileController extends Controller {
+    
+    private static $url_handlers = array(
+        '__resampled'           => 'handleResamples',
+        'assets/__resampled'    => 'handleResamples',
+    );
+    
+    public function handleResamples(SS_HTTPRequest $request, DataModel $model) {
+        return 'aqthr';
+    }
 
 	/**
 	 * Process all incoming requests passed to this controller, checking
@@ -15,23 +24,35 @@ class CDNSecureFileController extends Controller {
 	public function handleRequest(SS_HTTPRequest $request, DataModel $model) {
 
 		$response = new SS_HTTPResponse();
-
-		$filename = substr($request->getURL(), strlen('cdnassets/'));
-
+        
+        $filename = $request->getURL();
+        
+        if (strpos($filename, 'cdnassets') === 0) {
+            $filename = 'assets/' . substr($filename, strlen('cdnassets/'));
+        } 
+		
 		$file = File::get()->filter('filename', $filename)->first();
 
-		if ($file && $file->canView()) {
+		if ($file && $file->canView() && $file->CDNFile) {
 			// Permission passed redirect to file
-			$response->redirect($file->getSecureURL());
-		} elseif ($file instanceof File) {
-			// Permission failure
-			Security::permissionFailure($this, 'You are not authorised to access this resource. Please log in.');
+            if ($file->getViewType() != 'Anyone') {
+                $response->redirect($file->getSecureURL(180));
+            } else {
+                $response->redirect($file->getURL());
+            }
 		} else {
-			// File doesn't exist
-			$response = new SS_HTTPResponse('File Not Found', 404);
-		}
+            if (class_exists('SecureFileController')) {
+                $handoff = SecureFileController::create();
+                return $handoff->handleRequest($request, $model);
+            } elseif ($file instanceof File) {
+                // Permission failure
+                Security::permissionFailure($this, 'You are not authorised to access this resource. Please log in.');
+            } else {
+                // File doesn't exist
+                $response = new SS_HTTPResponse('File Not Found', 404);
+            }
+        }
 
 		return $response;
 	}
-
 }

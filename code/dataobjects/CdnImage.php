@@ -10,6 +10,7 @@
  * @license BSD License http://www.silverstripe.org/bsd-license
  */
 class CdnImage extends Image {
+    
 	public function getFormattedImage($format) {
 		$args = func_get_args();
 		

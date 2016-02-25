@@ -37,7 +37,6 @@ Injector:
   SilverStripeAustralia\ContentServiceAssets\VersionedFileExtension:
     constructor:
       - %$ContentService
-
 ---
 name: versioned_files
 only:
@@ -57,3 +56,10 @@ File:
     png: CdnImage
     gif: CdnImage
     bmp: CdnImage
+
+---
+Name: cdn_routes
+---
+Director:
+  rules:
+    'cdnassets/$ID': 'CDNSecureFileController'

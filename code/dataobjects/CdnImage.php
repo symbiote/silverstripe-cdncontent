@@ -28,6 +28,9 @@ class CdnImage extends Image {
 			$cached->Title = $this->Title;
 			// Pass through the parent, to store cached images in correct folder.
 			$cached->ParentID = $this->ParentID;
+			//Pass through a CanViewType type if we have any so that it can be used for canView checks
+			$cached->CanViewType = $this->CanViewType;
+
 			return $cached;
 		}
 
@@ -44,4 +47,30 @@ class CdnImage extends Image {
             return parent::getDimensions($dim);
         }
     }
+
+	/**
+	 * Replaces the Preview Image and Link with secured links if the file is secured.
+	 * @return FieldList
+	 */
+	public function getCMSFields() {
+		$fields = parent::getCMSFields();
+
+		$previewField = new LiteralField("SecureImageFull",
+				"<img id='thumbnailImage' class='thumbnail-preview' src='".$this->Link()."' alt='Secured File' />\n"
+		);
+
+		$url = $this->getSecureURL(300);// 5 minute link expire
+		$link = ReadonlyField::create('CDNUrl', 'CDN link',  sprintf('<a href="%s" target="_blank">%s</a>', $url, $url));
+		$link->setRightTitle('This link expires in five minutes from: '. date("Y-m-d H:i:s"));
+		$link->dontEscape = true;
+
+		if ($top = $fields->fieldByName('Root.Main.FilePreview')) {
+			$field = $top->fieldByName('FilePreviewImage');
+			$field->insertBefore($previewField, 'ImageFull');
+			$field->removeByName('ImageFull');
+			$top->replaceField('CDNUrl', $link);
+		}
+
+		return $fields;
+	}
 }

@@ -71,6 +71,44 @@ class CDNFile extends DataExtension {
 	 */
 	public function updateURL(&$url) {
 		if($this->owner instanceof \Image_Cached) {
+			return; /** handled in @link ImageCachedExtension */
+		}
+
+		/** @var \FileContent $pointer */
+		$pointer = $this->owner->obj('CDNFile');
+
+		if($pointer->exists() && $reader = $this->reader()) {
+			if ($this->owner->CanViewType) {
+				if ($this->owner->getViewType() == 'Anyone') {
+					$url = $reader->getURL();
+				} else {
+					$url = $this->owner->getSecureControllerLink($this->owner->Filename);
+				}
+			} else {
+				$url = $reader->getURL();
+			}
+		}
+	}
+
+	/**
+	 * Return a link to the S3SecureFileController with the id of this file appended allowing for secure link resolution
+	 * at page load, including on cached pages
+	 *
+	 * @return String link to S3SecureFileController endpoint
+	 */
+	public function getSecureControllerLink($ID) {
+		return BASE_URL . "/cdnassets/$ID";
+	}
+
+	/**
+	 * Return a secure url for the file. Currently we expect all secure urls are time limited but other limiting methods
+	 * nay be supported in the future
+	 *
+	 * @param Int $expires number of second the URL will remain valid
+	 * @return String URL pointing the the resource
+	 */
+	public function getSecureURL($expires = 60) {
+		if($this->owner instanceof \Image_Cached) {
 			return;
 		}
 
@@ -79,10 +117,35 @@ class CDNFile extends DataExtension {
 
 		if($pointer->exists()) {
 			$reader = $this->reader();
-			if ($reader) {
-				$url = $reader->getURL();
+			if ($reader && $this->owner->CanViewType) {
+				if ($this->owner->hasMethod('canView') && !$this->owner->canView()) {
+					return; // OR Change URL to null incase the file is in assets?
+				} else {
+					return $reader->getSecureURL($expires);
+				}
 			}
 		}
+	}
+
+	/**
+	 * Climbs the folder hierarchy until there's a CanViewType that does not equal Inherit
+	 *
+	 * @return String The first valid CanViewType of this File
+	 */
+	public function getViewType() {
+
+		if ($this->owner instanceof Folder) {
+			if ($this->owner->CanViewType == 'Inherit') {
+					if ($this->owner->ParentID) return $this->owner->Parent()->getViewType();
+					else return $this->owner->defaultPermissions($member);
+			} else {
+				return $this->owner->CanViewType;
+			}
+		}
+
+		$default = Config::inst()->get('SecureAssets', 'Defaults');
+
+		return isset($default['Permission']) ? $default['Permission'] : 'Anyone';
 	}
 
 	public function onAfterDelete() {

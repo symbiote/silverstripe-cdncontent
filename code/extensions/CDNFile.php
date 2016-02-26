@@ -74,26 +74,29 @@ class CDNFile extends DataExtension {
 			return; /** handled in @link ImageCachedExtension */
 		}
 
-        $controller = Controller::curr();
+        $controller = Controller::has_curr() ? Controller::curr() : null;
         if ($controller instanceof LeftAndMain) {
             return;
         }
-
-		/** @var \FileContent $pointer */
-		$pointer = $this->owner->obj('CDNFile');
+        
+        
+        if ($this->owner->CanViewType && $this->owner->getViewType() != 'Anyone') {
+            return;
+        }
+        
+        $cdnLink = $this->getCdnLink();
+        if ($cdnLink) {
+            $url = $cdnLink;
+        }
+	}
+    
+    public function getCdnLink() {
+        $pointer = $this->owner->obj('CDNFile');
 
 		if($pointer->exists() && $reader = $this->reader()) {
-			if ($this->owner->CanViewType) {
-				if ($this->owner->getViewType() == 'Anyone') {
-                    // public link
-					$url = $reader->getURL();
-				}
-			} else {
-                // public link
-				$url = $reader->getURL();
-			}
+			return $reader->getURL();
 		}
-	}
+    }
 
 	/**
 	 * Return a link to the S3SecureFileController with the id of this file appended allowing for secure link resolution

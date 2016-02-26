@@ -1,8 +1,6 @@
 <?php
 
 /**
- * 
- *
  * @author marcus@silverstripe.com.au
  * @license BSD License http://silverstripe.org/bsd-license/
  */
@@ -21,6 +19,12 @@ class CdnControllerExtension extends Extension {
 	 * @var ContentService 
 	 */
 	public $contentService;
+    
+    /**
+     *
+     * @var AssetUrlConversionFilter
+     */
+    public $contentFilter;
 	
 	protected $currentCdn;
 
@@ -100,4 +104,17 @@ class CdnControllerExtension extends Extension {
 		}
 		return $writer;
 	}
+    
+    public function afterCallActionHandler($request, $action) {
+        if (
+            $this->owner instanceof LeftAndMain ||
+            $this->owner instanceof TaskRunner ||
+            $this->owner instanceof Security ||
+            $this->owner instanceof DevelopmentAdmin ||
+			$this->owner instanceof DevBuildController ||
+			$this->owner instanceof DatabaseAdmin) {
+			return;
+		}
+        $this->contentFilter->setConvertUrls(true);
+    }
 }

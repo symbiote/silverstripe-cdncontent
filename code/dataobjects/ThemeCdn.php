@@ -69,13 +69,15 @@ class ThemeCdn extends DataObject {
 		
 		if ($this->Files) {
 			$files = $this->Files->getValues();
-			foreach ($files as $file) {
-				// make sure we're a safe name
-				$file = realpath($this->themeBase() . '/' . $file);
-				if (!file_exists($file)) {
-					throw new Exception("Invalid, possibly malicious, file reference $file");
-				}
-			}
+            if (is_array($files)) {
+                foreach ($files as $file) {
+                    // make sure we're a safe name
+                    $file = realpath($this->themeBase() . '/' . $file);
+                    if (!file_exists($file)) {
+                        throw new Exception("Invalid, possibly malicious, file reference $file");
+                    }
+                }
+            }
 		}
 		
 		if ($this->SyncNow) {

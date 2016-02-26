@@ -10,13 +10,25 @@ Injector:
     properties:
       contentDelivery: %$ContentDeliveryService
       contentService: %$ContentService
-
+      contentFilter: %$AssetUrlFilter
+  AssetUrlFilter:
+    class: AssetUrlConversionFilter
+  RequestProcessor:
+    properties:
+      filters: 
+        - %$AssetUrlFilter
 ---
 name: extensions
 ---
 Image_Cached:
   extensions:
     - SilverStripeAustralia\ContentServiceAssets\ImageCachedExtension
+Controller:
+  extensions:
+    - CdnControllerExtension
+HtmlEditorField:
+  extensions:
+    - HtmlEditorExtension
 #
 #Upload:
 #  extensions:

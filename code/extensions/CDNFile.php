@@ -74,7 +74,7 @@ class CDNFile extends DataExtension {
 			return; /** handled in @link ImageCachedExtension */
 		}
 
-        $controller = Controller::curr();
+        $controller = Controller::has_curr() ? Controller::curr() : null;
         if ($controller instanceof LeftAndMain) {
             return;
         }

@@ -38,7 +38,8 @@ class ImageCachedExtension extends \DataExtension {
 			if ($writer) {
                 if (file_exists($cached->getFullPath())) {
                     // likely that cached image never got built correctly. 
-                    $writer->write(fopen($cached->getFullPath(), 'r'), $mtime . '/' . $filename);
+                    $name = \Controller::join_links(dirname($filename), $mtime, basename($filename));
+                    $writer->write(fopen($cached->getFullPath(), 'r'), $name);
 
                     $asset->FilePointer = $writer->getContentId();
                     $asset->write();

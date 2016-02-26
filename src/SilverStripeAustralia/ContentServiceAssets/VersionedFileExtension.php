@@ -116,12 +116,14 @@ class VersionedFileExtension extends \DataExtension {
 			if(!$asset) {
 				$asset = new ContentServiceAsset();
 				$asset->Filename = $path;
+                $asset->ParentID = $this->owner->ParentID;
+                $mtime = strtotime($this->owner->LastEdited);
 			}
 
 			$writer = $this->service->getWriterFor($asset, 'FilePointer', $store);
-			$mtime = @filemtime($path); 
 			if ($writer) {
-				$writer->write(fopen($fullPath, 'r'), $mtime . '/' . $path);
+                $name = \Controller::join_links(dirname($filename), $mtime, basename($filename));
+				$writer->write(fopen($fullPath, 'r'), $name);
 				
 				if ($asset->ID <= 0) {
 					$asset->FilePointer = $writer->getContentId();

@@ -30,6 +30,8 @@ class CdnImage extends Image {
 			$cached->ParentID = $this->ParentID;
 			//Pass through a CanViewType type if we have any so that it can be used for canView checks
 			$cached->CanViewType = $this->CanViewType;
+            // needed for mtime calcs
+            $cached->LastEdited = $this->LastEdited;
             
 			return $cached;
 		}
@@ -60,8 +62,8 @@ class CdnImage extends Image {
 		);
 
 		$url = $this->Link();// 5 minute link expire
-		$link = ReadonlyField::create('CDNUrl', 'CDN link',  sprintf('<a href="%s" target="_blank">%s</a>', $url, $url));
-		$link->setRightTitle('This is the restricted access link');
+		$link = ReadonlyField::create('CDNUrl', 'CDN reference',  $this->CDNFile);
+		
 		$link->dontEscape = true;
 
 		if ($top = $fields->fieldByName('Root.Main.FilePreview')) {

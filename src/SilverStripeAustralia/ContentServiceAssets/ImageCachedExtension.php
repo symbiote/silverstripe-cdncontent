@@ -31,10 +31,11 @@ class ImageCachedExtension extends \DataExtension {
 		if(!$asset) {
 			$asset = new ContentServiceAsset();
 			$asset->Filename = $filename;
+            $asset->ParentID = $this->owner->ParentID;
+            $mtime = strtotime($this->owner->LastEdited);
 
 			$writer = $this->service->getWriterFor($asset, 'FilePointer', $storeIn);
 			if ($writer) {
-				$mtime = @filemtime($cached->getFullPath());
                 if (file_exists($cached->getFullPath())) {
                     // likely that cached image never got built correctly. 
                     $writer->write(fopen($cached->getFullPath(), 'r'), $mtime . '/' . $filename);
@@ -55,7 +56,7 @@ class ImageCachedExtension extends \DataExtension {
 
 			if ($reader) {
                 if ($this->owner->CanViewType && $this->owner->getViewType() != 'Anyone') {
-                    $url = 'assets/__resampled/' . $filename;
+                    return;
                 } else {
                     $url = $reader->getURL();
                 }

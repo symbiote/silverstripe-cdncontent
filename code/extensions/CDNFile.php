@@ -75,7 +75,7 @@ class CDNFile extends DataExtension {
 		}
 
         $controller = Controller::curr();
-        if ($controller instanceof CMSMain) {
+        if ($controller instanceof LeftAndMain) {
             return;
         }
 
@@ -85,12 +85,11 @@ class CDNFile extends DataExtension {
 		if($pointer->exists() && $reader = $this->reader()) {
 			if ($this->owner->CanViewType) {
 				if ($this->owner->getViewType() == 'Anyone') {
+                    // public link
 					$url = $reader->getURL();
-				} else {
-                    // force through access control
-					$url = $this->owner->getSecureControllerLink();
 				}
 			} else {
+                // public link
 				$url = $reader->getURL();
 			}
 		}
@@ -104,10 +103,7 @@ class CDNFile extends DataExtension {
 	 */
 	public function getSecureControllerLink() {
         $filename = $this->owner->Filename;
-        if (strpos($filename, 'assets') === 0) {
-            $filename = substr($filename, 7);
-        }
-		return "cdnassets/". $filename;
+		return $filename;
 	}
 
 	/**
@@ -127,12 +123,8 @@ class CDNFile extends DataExtension {
 
 		if($pointer->exists()) {
 			$reader = $this->reader();
-			if ($reader && $this->owner->CanViewType) {
-				if ($this->owner->hasMethod('canView') && !$this->owner->canView()) {
-					return; // OR Change URL to null incase the file is in assets?
-				} else {
-					return $reader->getSecureURL($expires);
-				}
+			if ($reader && $this->owner->canView()) {
+				return $reader->getSecureURL($expires);
 			}
 		}
 	}
@@ -245,7 +237,7 @@ class CDNFile extends DataExtension {
 			$v = $file->getValue();
 			if (strlen($file->getValue())) {
 				$url = $file->URL();
-				$link = ReadonlyField::create('CDNUrl', 'CDN link',  sprintf('<a href="%s" target="_blank">%s</a>', $url, $url));
+				$link = ReadonlyField::create('CDNUrl', 'CDN reference',  $v);
 				$link->dontEscape = true;
 				
 				if ($top = $fields->fieldByName('Root.Main.FilePreview')) {

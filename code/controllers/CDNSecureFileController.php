@@ -32,6 +32,9 @@ class CDNSecureFileController extends Controller {
         }
         
 		if ($file && $file->canView()) {
+            if (!$file->CDNFile) {
+                return $this->httpError(404);
+            }
 			// Permission passed redirect to file
             if ($file->getViewType() != 'Anyone') {
                 $secureLink = $file->getSecureURL(180);

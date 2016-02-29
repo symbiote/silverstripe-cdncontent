@@ -16,6 +16,11 @@ class AssetUrlConversionFilter implements RequestFilter {
         if ($this->convertUrls) {
             $body = $response->getBody();
             
+//            if (preg_match_all('{(src|href)="/?(assets/.*?)"}', $body, $matches)) {
+//                $names = $matches[2];
+//                $files = 
+//            }
+            // find urls inserted in content
             if (preg_match_all('/data-cdnfileid="(\d+)"/', $body, $matches)) {
                 $files = CdnImage::get()->filter('ID', $matches[1]);
                 foreach ($files as $file) {

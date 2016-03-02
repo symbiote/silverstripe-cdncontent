@@ -6,6 +6,9 @@
  * @license BSD License http://www.silverstripe.org/bsd-license
  */
 class CDNFile extends DataExtension {
+    
+    const ANYONE_PERM = 'Anyone';
+    
 	private static $db = array(
 		'CDNFile'			=> 'FileContent'
 	);

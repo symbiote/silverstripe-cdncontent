@@ -69,6 +69,6 @@ class ContentServiceAsset extends \DataObject {
         if ($parent && $parent->ID) {
             return $parent->getViewType();
         }
-        return 'Anyone';
+        return \CDNFile::ANYONE_PERM;
     }
 }

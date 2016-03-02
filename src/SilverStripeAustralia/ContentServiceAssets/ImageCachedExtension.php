@@ -56,7 +56,7 @@ class ImageCachedExtension extends \DataExtension {
 			$reader = $this->service->getReader($asset->FilePointer);
 
 			if ($reader) {
-                if ($this->owner->CanViewType && $this->owner->getViewType() != 'Anyone') {
+                if ($this->owner->CanViewType && $this->owner->getViewType() != CDNFile::ANYONE_PERM) {
                     return;
                 } else {
                     $url = $reader->getURL();

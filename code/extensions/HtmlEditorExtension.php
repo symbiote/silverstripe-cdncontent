@@ -8,7 +8,7 @@ class HtmlEditorExtension extends Extension {
         if (!$image) {
             return;
         }
-        if ($image->CanViewType && $image->getViewType() != 'Anyone') {
+        if ($image->CanViewType && $image->getViewType() != CDNFile::ANYONE_PERM) {
             return;
         }
         

@@ -83,7 +83,7 @@ class CDNFile extends DataExtension {
         }
         
         
-        if ($this->owner->CanViewType && $this->owner->getViewType() != 'Anyone') {
+        if ($this->owner->CanViewType && $this->owner->getViewType() != CDNFile::ANYONE_PERM) {
             return;
         }
         
@@ -156,7 +156,7 @@ class CDNFile extends DataExtension {
 
 		$default = Config::inst()->get('SecureAssets', 'Defaults');
 
-		return isset($default['Permission']) ? $default['Permission'] : 'Anyone';
+		return isset($default['Permission']) ? $default['Permission'] : CDNFile::ANYONE_PERM;
 	}
 
 	public function onAfterDelete() {

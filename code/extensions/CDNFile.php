@@ -159,6 +159,18 @@ class CDNFile extends DataExtension {
 		return isset($default['Permission']) ? $default['Permission'] : CDNFile::ANYONE_PERM;
 	}
 
+    /**
+     * Ensure update_filesystem is set to FALSE if we're writing something 
+     * to do with a CDN File/Folder
+     */
+    public function onBeforeWrite() {
+        $store = $this->targetStore();
+        if (strlen($store)) {
+            Config::inst()->update('File', 'update_filesystem', false);
+        }
+        parent::onBeforeWrite();
+    }
+    
 	public function onAfterDelete() {
 		if ($this->owner->ParentID && $this->owner->Parent()->getCDNStore() && !($this->owner instanceof Folder)) {
 			$obj = $this->owner->obj('CDNFile');

@@ -47,6 +47,10 @@ class VersionedFileExtension extends \DataExtension {
 	}
 	
 	protected function findCachedPaths() {
+        if (!$this->owner->hasExtension('CDNFile')) {
+			return;
+		}
+        
 		$store = $this->owner->targetStore();
 		if (!$store) {
 			return;
@@ -74,6 +78,10 @@ class VersionedFileExtension extends \DataExtension {
 	}
 
 	protected function uploadCachedImages() {
+        if (!$this->owner->hasExtension('CDNFile')) {
+			return;
+		}
+        
 		$store = $this->owner->targetStore();
 		if (!$store) {
 			return;

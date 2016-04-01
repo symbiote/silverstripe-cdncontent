@@ -241,7 +241,12 @@ class CDNFile extends DataExtension {
 
 				// $writer->write($this->owner->getFullPath(), $this->owner->getFullPath());
 				$mtime = @filemtime($path);
-				$writer->write(fopen($file->getFullPath(), 'r'), $mtime . '/' . $file->getFilename());
+                $name = $file->getFilename();
+                if ($lastPos = strrpos($name, '/')) {
+                    $name = substr($name, 0, $lastPos) . '/' . $mtime . substr($name, $lastPos);
+                }
+                
+				$writer->write(fopen($file->getFullPath(), 'r'), $name);
 
 				// writer should now have an id
 				$file->CDNFile = $writer->getContentId();

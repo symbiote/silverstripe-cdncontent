@@ -147,6 +147,7 @@ class CDNFile extends DataExtension {
 					if ($this->owner->ParentID) {
                         return $this->owner->Parent()->getViewType();
                     } else {
+						$member = Member::currentUser();
                         return $this->owner->defaultPermissions($member);
                     }
 			} else {

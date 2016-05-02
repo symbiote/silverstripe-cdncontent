@@ -22,6 +22,19 @@ index 2830832..8f19d81 100644
  	}
  
  	/**
+diff --git framework/filesystem/GD.php framework/filesystem/GD.php
+index d34704f..b8d64f0 100644
+--- framework/filesystem/GD.php
++++ framework/filesystem/GD.php
+@@ -129,7 +129,7 @@ class GDBackend extends Object implements Image_Backend {
+ 
+ 		if ($limit < 0) return true; // memory_limit == -1
+ 
+-		$imageInfo = getimagesize($filename);
++		$imageInfo = @getimagesize($filename);
+ 
+ 		// bits per channel (rounded up, default to 1)
+ 		$bits = isset($imageInfo['bits']) ? ($imageInfo['bits'] + 7) / 8 : 1;
 diff --git framework/forms/HtmlEditorField.php framework/forms/HtmlEditorField.php
 index 4bc987e..4c12319 100644
 --- framework/forms/HtmlEditorField.php
@@ -44,3 +57,23 @@ index 4bc987e..4c12319 100644
  		return array(null, null);
  	}
  
+diff --git framework/forms/UploadField.php framework/forms/UploadField.php
+index 57926dc..7dfefc8 100644
+--- framework/forms/UploadField.php
++++ framework/forms/UploadField.php
+@@ -870,11 +870,13 @@ class UploadField extends FileField {
+ 			$width = $this->getPreviewMaxWidth();
+ 			$height = $this->getPreviewMaxHeight();
+ 			if ($file->hasMethod('getThumbnail')) {
+-				return $file->getThumbnail($width, $height)->getURL();
++               $transform = $file->getThumbnail($width, $height);
++				return $transform ? $transform->getURL() : $file->Icon();
+ 			} elseif ($file->hasMethod('getThumbnailURL')) {
+ 				return $file->getThumbnailURL($width, $height);
+ 			} elseif ($file->hasMethod('Fit')) {
+-				return $file->Fit($width, $height)->getURL();
++               $transform = $file->Fit($width, $height);
++               return $transform ? $transform->getURL() : $file->Icon();
+ 			} else {
+ 				return $file->Icon();
+ 			}

@@ -29,6 +29,9 @@ Controller:
 HtmlEditorField:
   extensions:
     - HtmlEditorExtension
+DatabaseAdmin:
+  extensions:
+    - DevBuildExtension
 #
 #Upload:
 #  extensions:

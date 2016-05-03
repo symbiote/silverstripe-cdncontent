@@ -68,6 +68,9 @@ File:
     png: CdnImage
     gif: CdnImage
     bmp: CdnImage
+Injector:
+  Image:
+    class: CdnImage
 
 ---
 Name: cdn_routes

@@ -35,5 +35,8 @@ File:
 Folder: 
   extensions:
     - CDNFolder
-
+# If using the Versioned Files module
+FileVersion:
+  extensions:
+    - CDNFile
 ```

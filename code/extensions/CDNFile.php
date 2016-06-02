@@ -65,6 +65,21 @@ class CDNFile extends DataExtension {
 
 		return $this->contentService->getDefaultStore();
 	}
+    
+    /**
+     * Handles FileVersion interaction
+     */
+    public function getCDNStore() {
+        if ($this->owner->ParentID) {
+            return $this->owner->Parent()->getCDNStore();
+        }
+    }
+    
+    public function getCDNWriter() {
+        if ($this->owner->ParentID) {
+            return $this->owner->Parent()->getCDNWriter();
+        }
+    }
 
 	/**
 	 * Update the URL used for a file in various locations
@@ -234,7 +249,7 @@ class CDNFile extends DataExtension {
 	 */
 	public function uploadToContentService() {
 		$file = $this->owner;
-		if (!$file instanceof Folder && $writer = $this->writer()) {
+		if (!($file instanceof Folder) && $writer = $this->writer()) {
 			/** @var \File $file */
 			
 			$path = $file->getFullPath();
@@ -247,7 +262,7 @@ class CDNFile extends DataExtension {
                     $name = substr($name, 0, $lastPos) . '/' . $mtime . substr($name, $lastPos);
                 }
                 
-				$writer->write(fopen($file->getFullPath(), 'r'), $name);
+				$writer->write(fopen($path, 'r'), $mtime . '/' . $file->getFilename());
 
 				// writer should now have an id
 				$file->CDNFile = $writer->getContentId();
@@ -275,5 +290,7 @@ class CDNFile extends DataExtension {
 				}
 			}
 		}
+        
+        $fields->removeByName('PreviousVersion');
 	}
 }

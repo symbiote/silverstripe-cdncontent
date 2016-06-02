@@ -49,6 +49,9 @@ Injector:
   SilverStripeAustralia\ContentServiceAssets\ImageCachedExtension:
     constructor:
       - %$ContentService
+  SilverStripeAustralia\ContentServiceAssets\ResampledFileExtension:
+    constructor:
+      - %$ContentService
   SilverStripeAustralia\ContentServiceAssets\VersionedFileExtension:
     constructor:
       - %$ContentService
@@ -57,9 +60,17 @@ name: versioned_files
 only:
   moduleexists: versionedfiles
 ---
-File:
+FileVersion:
   extensions:
     - SilverStripeAustralia\ContentServiceAssets\VersionedFileExtension
+
+---
+name: file_extensions
+---
+File:
+  extensions:
+    - SilverStripeAustralia\ContentServiceAssets\ResampledFileExtension
+
 
 ---
 Name: cdn_image_settings

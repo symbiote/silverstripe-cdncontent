@@ -27,6 +27,8 @@ class CDNSecureFileController extends Controller {
         $file = null;
         if (strpos($filename, '_resampled') !== false) {
             $file = ContentServiceAsset::get()->filter('Filename', $filename)->first();
+        } else if (strpos($filename, '/_versions/') !== false) {
+            $file = FileVersion::get()->filter('Filename', "/" . $filename)->first();
         } else {
             $file = File::get()->filter('filename', $filename)->first();
         }

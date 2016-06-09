@@ -38,11 +38,17 @@ class CDNSecureFileController extends Controller {
                 return $this->httpError(404);
             }
 			// Permission passed redirect to file
+            $redirectLink = '';
             if ($file->getViewType() != CDNFile::ANYONE_PERM) {
-                $secureLink = $file->getSecureURL(180);
-                $response->redirect($secureLink);
+                $redirectLink = $file->getSecureURL(180);
             } else {
-                $response->redirect($file->getURL());
+                $redirectLink = $file->getURL();
+            }
+
+            if (trim($redirectLink, '/') != $request->getURL()) {
+                $response->redirect($redirectLink);
+            } else {
+                return $this->httpError(404);
             }
 		} else {
             if (class_exists('SecureFileController')) {

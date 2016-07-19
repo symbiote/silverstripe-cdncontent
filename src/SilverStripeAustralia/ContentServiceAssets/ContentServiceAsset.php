@@ -14,6 +14,7 @@ class ContentServiceAsset extends \DataObject {
 
     private static $has_one = array(
         'Parent'        => 'File',
+        'Source'        => 'File',
     );
 
 	private static $indexes = array(
@@ -43,7 +44,7 @@ class ContentServiceAsset extends \DataObject {
     public function getURL() {
         $pointer = $this->obj('FilePointer');
         
-        $controller = \Controller::curr();
+        $controller = \Controller::has_curr() ? \Controller::curr() : null;
         if ($controller instanceof \CMSMain) {
             return $this->Filename;
         }

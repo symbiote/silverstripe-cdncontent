@@ -24,6 +24,7 @@ class CdnImage extends Image {
 			}
 			
 			$cached = new Image_Cached($cacheFile);
+            
 			// Pass through the title so the templates can use it
 			$cached->Title = $this->Title;
 			// Pass through the parent, to store cached images in correct folder.
@@ -32,6 +33,8 @@ class CdnImage extends Image {
 			$cached->CanViewType = $this->CanViewType;
             // needed for mtime calcs
             $cached->LastEdited = $this->LastEdited;
+            
+            $cached->SourceID = $this->ID;
             
 			return $cached;
 		}

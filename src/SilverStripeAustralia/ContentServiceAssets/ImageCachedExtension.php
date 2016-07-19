@@ -31,6 +31,7 @@ class ImageCachedExtension extends \DataExtension {
 		if(!$asset) {
 			$asset = new ContentServiceAsset();
 			$asset->Filename = $filename;
+            $asset->SourceID = $this->owner->SourceID;
             $asset->ParentID = $this->owner->ParentID;
             $mtime = strtotime($this->owner->LastEdited);
 

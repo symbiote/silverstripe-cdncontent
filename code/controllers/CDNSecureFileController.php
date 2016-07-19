@@ -34,7 +34,7 @@ class CDNSecureFileController extends Controller {
         }
         
 		if ($file && $file->canView()) {
-            if (!$file->CDNFile) {
+            if (!$file->CDNFile && !$file->FilePointer) {
                 return $this->httpError(404);
             }
 			// Permission passed redirect to file

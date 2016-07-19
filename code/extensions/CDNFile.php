@@ -92,7 +92,7 @@ class CDNFile extends DataExtension {
 			return; /** handled in @link ImageCachedExtension */
 		}
 
-        // in the CMS, we do _not_ change the asset URL
+        // in the CMS, we do _not_ change the asset 
         $controller = Controller::has_curr() ? Controller::curr() : null;
         if ($controller instanceof LeftAndMain) {
             return;

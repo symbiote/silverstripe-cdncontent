@@ -59,6 +59,10 @@ class ImageCachedExtension extends \DataExtension {
                 if ($this->owner->CanViewType && $this->owner->getViewType() != \CDNFile::ANYONE_PERM) {
                     return;
                 } else {
+                    $controller = \Controller::has_curr() ? \Controller::curr() : null;
+                    if ($controller instanceof \LeftAndMain) {
+                        return;
+                    }
                     $url = $reader->getURL();
                 }
 			}

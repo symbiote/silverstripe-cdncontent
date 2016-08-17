@@ -268,6 +268,12 @@ class CDNFile extends DataExtension {
 				// writer should now have an id
 				$file->CDNFile = $writer->getContentId();
 				$file->write();
+                
+                // confirm the remote upload is there, and delete the local file
+                $reader = $writer->getReader();
+                if ($reader && $reader->exists()) {
+                    @unlink($path);
+                }
 			}
 		}
 	}

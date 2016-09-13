@@ -256,14 +256,13 @@ class CDNFile extends DataExtension {
 			$path = $file->getFullPath();
 			if (strlen($path) && is_file($path) && file_exists($path)) {
 
-				// $writer->write($this->owner->getFullPath(), $this->owner->getFullPath());
 				$mtime = @filemtime($path);
-                $name = $file->getFilename();
+                $name = trim($file->getFilename(), '/');
                 if ($lastPos = strrpos($name, '/')) {
                     $name = substr($name, 0, $lastPos) . '/' . $mtime . substr($name, $lastPos);
                 }
                 
-				$writer->write(fopen($path, 'r'), $mtime . '/' . $file->getFilename());
+				$writer->write(fopen($path, 'r'), $mtime . '/' . trim($file->getFilename(), '/'));
 
 				// writer should now have an id
 				$file->CDNFile = $writer->getContentId();

@@ -58,6 +58,9 @@ class ResampledFileExtension extends \DataExtension {
 		$iterator = null;
 		$dir = dirname($this->owner->getFullPath()) . '/_resampled';
 
+        if (!is_dir($dir)) {
+            return;
+        }
 		try {
 			$iterator = new DirectoryIterator($dir);
 		} catch(UnexpectedValueException $e) {

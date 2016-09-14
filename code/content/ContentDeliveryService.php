@@ -8,6 +8,8 @@
  */
 class ContentDeliveryService {
 
+    const CDN_THEME_PREFIX = 'cdntheme';
+    
 	/**
 	 * @var ContentService
 	 */
@@ -41,7 +43,7 @@ class ContentDeliveryService {
 	 */
 	public function storeThemeFile($toCdn, $file, $forceUpdate = false, $processReferences = false) {
 		$mtime = @filemtime($file);
-		$relativeName = $mtime . '/' . trim(str_replace(Director::baseFolder(), '', $file), '/');
+		$relativeName = self::CDN_THEME_PREFIX . '/' . $mtime . '/' . trim(str_replace(Director::baseFolder(), '', $file), '/');
 		
 		if (!$forceUpdate) {
 			// see if the file already exists, if not we do NOT do an update

@@ -60,7 +60,7 @@ class CdnControllerExtension extends Extension {
 			}
 			
 			$mtime = @filemtime(Director::baseFolder().'/'.$assetPath);
-			$timedAssetPath = $mtime . '/' . $assetPath;
+			$timedAssetPath = ContentDeliveryService::CDN_THEME_PREFIX . '/' . $mtime . '/' . $assetPath;
 			
 			$reader = $this->contentService->findReaderFor($store, $timedAssetPath);
 			if ($reader && (!$verify || $reader->exists())) {

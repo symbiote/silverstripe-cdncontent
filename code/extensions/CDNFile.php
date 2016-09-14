@@ -262,7 +262,7 @@ class CDNFile extends DataExtension {
                     $name = substr($name, 0, $lastPos) . '/' . $mtime . substr($name, $lastPos);
                 }
                 
-				$writer->write(fopen($path, 'r'), $mtime . '/' . trim($file->getFilename(), '/'));
+				$writer->write(fopen($path, 'r'), $name);
 
 				// writer should now have an id
 				$file->CDNFile = $writer->getContentId();

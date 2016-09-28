@@ -33,3 +33,37 @@ FileVersion:
   extensions:
     - CDNFile
 ```
+
+
+* Configure the locations for storing content items
+
+```
+  ContentService:
+    constructor:
+      defaultStore: S3DevBucket
+    properties:
+      stores:
+        FileCDN:
+          ContentReader: FileContentReader
+          ContentWriter: FileContentWriter
+```
+
+Note: In this case, ContentReader and ContentWriter should be the names of other
+items configured in the injector - the default `contentservices.yml` defines the above ones as
+
+```
+---
+Name: contentservices
+---
+
+Injector:
+  FileContentReader:
+    type: prototype
+    properties:
+      basePath: mycontent
+  FileContentWriter:
+    type: prototype
+    properties:
+      basePath: mycontent
+
+```

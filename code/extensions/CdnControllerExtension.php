@@ -105,7 +105,7 @@ class CdnControllerExtension extends Extension {
 		return $writer;
 	}
     
-    public function afterCallActionHandler($request, $action) {
+    public function beforeCallActionHandler($request, $action) {
         if (
             $this->owner instanceof LeftAndMain ||
             $this->owner instanceof TaskRunner ||

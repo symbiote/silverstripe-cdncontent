@@ -15,15 +15,12 @@ class AssetUrlConversionFilter implements RequestFilter {
     }
     
     public function postRequest(\SS_HTTPRequest $request, \SS_HTTPResponse $response, \DataModel $model) {
-        if ($this->convertUrls) {
+        if ($this->convertUrls && $response && $response->getStatusCode() == 200) {
+            // only convert if we have an HTML content type response
             $body = $response->getBody();
-            
-//            if (preg_match_all('{(src|href)="/?(assets/.*?)"}', $body, $matches)) {
-//                $names = $matches[2];
-//                $files = 
-//            }
+
             // find urls inserted in content
-            if (preg_match_all('/data-cdnfileid="(\d+)"/', $body, $matches)) {
+            if (strpos($body, 'cdnfileid') > 0 && preg_match_all('/data-cdnfileid="(\d+)"/', $body, $matches)) {
                 $files = CdnImage::get()->filter('ID', $matches[1]);
                 $fileIds = array();
                 foreach ($files as $file) {

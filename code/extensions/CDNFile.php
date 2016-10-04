@@ -157,23 +157,24 @@ class CDNFile extends DataExtension {
 	 * @return String The first valid CanViewType of this File
 	 */
 	public function getViewType() {
-
-//		if ($this->owner instanceof Folder) {
-			if ($this->owner->CanViewType == 'Inherit') {
-					if ($this->owner->ParentID) {
-                        return $this->owner->Parent()->getViewType();
-                    } else {
-						$member = Member::currentUser();
-                        return $this->owner->defaultPermissions($member);
-                    }
-			} else {
-				return $this->owner->CanViewType;
-			}
-//		}
+        $perm = null;
+        
+        if ($this->owner->CanViewType == 'Inherit') {
+            if ($this->owner->ParentID) {
+                $perm = $this->owner->Parent()->getViewType();
+            } else {
+                $member = Member::currentUser();
+                $perm = $this->owner->defaultPermissions($member);
+            }
+        } else {
+            $perm = $this->owner->CanViewType;
+        }
 
 		$default = Config::inst()->get('SecureAssets', 'Defaults');
 
-		return isset($default['Permission']) ? $default['Permission'] : CDNFile::ANYONE_PERM;
+		$default = isset($default['Permission']) ? $default['Permission'] : CDNFile::ANYONE_PERM;
+        
+        return $perm ? $perm : $default;
 	}
 
     /**

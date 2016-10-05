@@ -140,6 +140,11 @@ class ResampledFileExtension extends \DataExtension {
 					$asset->FilePointer = $writer->getContentId();
 					$asset->write();
 				}
+
+                $reader = $writer->getReader();
+                if ($reader && $reader->exists()) {
+                    @unlink($fullPath);
+                }
 			}
 		}
 	}

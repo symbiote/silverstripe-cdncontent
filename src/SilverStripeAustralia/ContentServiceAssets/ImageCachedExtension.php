@@ -43,6 +43,13 @@ class ImageCachedExtension extends \DataExtension {
                     $writer->write(fopen($cached->getFullPath(), 'r'), $name);
 
                     $asset->FilePointer = $writer->getContentId();
+                    
+                    // @TODO Cleanup local system copy; see note further below
+                    $reader = $writer->getReader();
+                    if ($reader && $reader->exists()) {
+                        @unlink($cached->getFullPath());
+                    }
+
                     $asset->write();
                 } else {
                     $asset = null;
@@ -57,6 +64,18 @@ class ImageCachedExtension extends \DataExtension {
 			$reader = $this->service->getReader($asset->FilePointer);
 
 			if ($reader) {
+                // cleanup local filesystem copies. @TODO revisit how this runs
+//                if (file_exists($cached->getFullPath())) {
+//                    @unlink($cached->getFullPath());
+//                    // check the source file too
+//                    if ($asset->SourceID) {
+//                        $source = $asset->Source();
+//                        if ($source && file_exists($source->getFullPath())) {
+//                            @unlink($source->getFullPath());
+//                        }
+//                    }
+//                }
+
                 if ($this->owner->CanViewType && $this->owner->getViewType() != \CDNFile::ANYONE_PERM) {
                     return;
                 } else {

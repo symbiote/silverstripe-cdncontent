@@ -101,7 +101,6 @@ class CDNFile extends DataExtension {
             return;
         }
         
-        
         if ($this->owner->CanViewType && $this->owner->getViewType() != CDNFile::ANYONE_PERM) {
             return;
         }
@@ -148,7 +147,7 @@ class CDNFile extends DataExtension {
 
 		if($pointer->exists()) {
 			$reader = $this->reader();
-			if ($reader && $this->owner->canView()) {
+			if ($reader && $this->owner->canView() && method_exists($reader, 'getSecureURL')) {
 				return $reader->getSecureURL($expires);
 			}
 		}

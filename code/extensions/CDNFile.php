@@ -10,7 +10,10 @@ class CDNFile extends DataExtension {
     const ANYONE_PERM = 'Anyone';
     
 	private static $db = array(
-		'CDNFile'			=> 'FileContent'
+		'CDNFile'			=> 'FileContent',
+        
+        'FileSize'          => 'Int',
+        'ImageDim'          => 'Varchar',
 	);
 	
 	private static $dependencies = array(
@@ -267,6 +270,13 @@ class CDNFile extends DataExtension {
 
 				// writer should now have an id
 				$file->CDNFile = $writer->getContentId();
+                $file->FileSize = @filesize($path);
+                
+                // check whether it's an image, and handle its dimensions
+                if ($file instanceof CdnImage) {
+                    $file->storeDimensions();
+                }
+                
 				$file->write();
                 
                 // confirm the remote upload is there, and delete the local file
@@ -297,6 +307,11 @@ class CDNFile extends DataExtension {
 				}
 			}
 		}
+        
+        $sizeField = $fields->dataFieldByName('Size');
+        if ($sizeField) {
+            $sizeField->setValue($this->owner->FileSize);
+        }
         
         $fields->removeByName('PreviousVersion');
 	}

@@ -43,13 +43,31 @@ class CdnImage extends Image {
 	}
     
     public function getDimensions($dim = "string") {
+        if ($this->ImageDim && strlen($this->ImageDim) > 1) {
+            if ($dim == 'string') {
+                return $this->ImageDim;
+            }
+            $parts = explode('x', $this->ImageDim);
+            return isset($parts[$dim]) ? $parts[$dim] : null;
+        }
         $pointer = $this->obj('CDNFile');
         if($this->ID && $this->Filename && $pointer->exists()) {
             $this->ensureLocalFile();
         }
         
         if ($this->localFileExists()) {
+            // make sure to save the dimensions for next time
+            $this->storeDimensions();
+            $this->write();
             return parent::getDimensions($dim);
+        }
+    }
+    
+    public function storeDimensions() {
+        $size = getimagesize($this->getFullPath());
+        if (count($size)) {
+            // store the size
+            $this->ImageDim = $size[0] . 'x' . $size[1];
         }
     }
 

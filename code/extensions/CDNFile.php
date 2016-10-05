@@ -69,6 +69,11 @@ class CDNFile extends DataExtension {
 		return $this->contentService->getDefaultStore();
 	}
     
+    public function Size() {
+        $size = $this->owner->FileSize;
+        return ($size) ? File::format_size($size) : false;;
+    }
+    
     /**
      * Handles FileVersion interaction
      */
@@ -288,6 +293,7 @@ class CDNFile extends DataExtension {
 	}
 
 	public function updateCMSFields(\FieldList $fields) {
+        
 		if ($file = $this->owner->obj('CDNFile')) {
 			$v = $file->getValue();
 			if (strlen($file->getValue())) {
@@ -305,12 +311,13 @@ class CDNFile extends DataExtension {
 					$fields->addFieldToTab('Root.Main', $link);
 				}
 			}
+            
+            $sizeField = $fields->dataFieldByName('Size');
+            if ($sizeField) {
+                $sizeField->setValue($filesize = $this->owner->Size());
+            }
 		}
         
-        $sizeField = $fields->dataFieldByName('Size');
-        if ($sizeField) {
-            $sizeField->setValue($this->owner->FileSize);
-        }
         
         $fields->removeByName('PreviousVersion');
 	}

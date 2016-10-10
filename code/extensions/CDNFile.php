@@ -225,6 +225,9 @@ class CDNFile extends DataExtension {
     }
     
     public function localFileExists() {
+    	if (!$this->owner->getField('Filename')) {
+    		return false;
+    	}
         $path = $this->owner->getFullPath();
         if (!file_exists($path) || filesize($path) == 0) {
             return false;

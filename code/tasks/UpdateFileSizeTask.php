@@ -33,6 +33,7 @@ class UpdateFileSizeTask extends BuildTask
                     $dim = $file->getDimensions();
                     echo "dimensions $dim ... "; flush();
                 }
+                $file->write();
                 unlink($file->getFullPath());
             } else {
                 echo " cannot download $file->Title - $file->CDNFile <br/>\n";

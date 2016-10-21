@@ -14,6 +14,8 @@ class ImageBackendFactory implements Factory {
 
 	private $backend;
 
+    private $cleanupFiles = array();
+    
 	/**
 	 * @param string $backend The underlying backend name.
 	 */
@@ -30,11 +32,20 @@ class ImageBackendFactory implements Factory {
 
 			if ($file) {
 				$file->downloadFromContentService();
+                $this->cleanupFiles[] = $file->getFullPath();
 			}
 		}
 
 		$reflector = new ReflectionClass($this->backend);
 		return $reflector->newInstanceArgs($params);
 	}
-
+    
+    public function __destruct()
+    {
+        foreach ($this->cleanupFiles as $path) {
+            if (file_exists($path)) {
+                @unlink($path);
+            }
+        }
+    }
 }

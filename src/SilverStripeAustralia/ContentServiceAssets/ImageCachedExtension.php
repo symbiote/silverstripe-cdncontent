@@ -51,6 +51,11 @@ class ImageCachedExtension extends \DataExtension {
                     }
 
                     $asset->write();
+                    
+                    $reader = $writer->getReader();
+                    if ($reader && $reader->exists()) {
+                        @unlink($cached->getFullPath());
+                    }
                 } else {
                     $asset = null;
                 }

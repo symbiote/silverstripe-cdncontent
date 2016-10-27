@@ -1,27 +1,36 @@
 diff --git framework/filesystem/File.php framework/filesystem/File.php
-index 2830832..8f19d81 100644
+index 8d3bfc2..3f9e1bd 100644
 --- framework/filesystem/File.php
 +++ framework/filesystem/File.php
 @@ -227,7 +227,7 @@ class File extends DataObject {
- 	 * @return bool
- 	 */
- 	public function exists() {
--		return parent::exists() && file_exists($this->getFullPath());
-+		return parent::exists(); //  && file_exists($this->getFullPath());
- 	}
- 
- 	/**
+         * @return bool
+         */
+        public function exists() {
+-               return parent::exists() && file_exists($this->getFullPath());
++               return parent::exists(); //  && file_exists($this->getFullPath());
+        }
+
+        /**
+@@ -302,7 +302,7 @@ class File extends DataObject {
+                // ensure that the record is synced with the filesystem before deleting
+                $this->updateFilesystem();
+
+-               if($this->exists() && !is_dir($this->getFullPath())) {
++               if($this->exists() && !is_dir($this->getFullPath()) && file_exists($this->getFullPath())) {
+                        unlink($this->getFullPath());
+                }
+        }
 @@ -710,7 +710,9 @@ class File extends DataObject {
- 	 * @return string
- 	 */
- 	public function getURL() {
--		return Controller::join_links(Director::baseURL(), $this->getFilename());
-+		$url = Controller::join_links(Director::baseURL(), $this->getFilename());
+         * @return string
+         */
+        public function getURL() {
+-               return Controller::join_links(Director::baseURL(), $this->getFilename());
++               $url = Controller::join_links(Director::baseURL(), $this->getFilename());
 +        $this->extend('updateURL', $url);
 +        return $url;
- 	}
- 
- 	/**
+        }
+
+        /**
 diff --git framework/filesystem/GD.php framework/filesystem/GD.php
 index d34704f..b8d64f0 100644
 --- framework/filesystem/GD.php

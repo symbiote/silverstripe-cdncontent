@@ -72,4 +72,17 @@ class ContentServiceAsset extends \DataObject {
         }
         return \CDNFile::ANYONE_PERM;
     }
+    
+    public function onAfterDelete() {
+        $obj = $this->obj('FilePointer');
+        if ($obj) {
+            try {
+                $writer = $obj->getReader()->getWriter();
+                $writer->delete();
+            } catch (Exception $ex) {
+                // not much that can be done really?
+                SS_Log::log($ex, SS_Log::WARN);
+            }
+        }
+	}
 }

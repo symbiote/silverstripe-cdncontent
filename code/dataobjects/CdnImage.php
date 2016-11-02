@@ -1,5 +1,7 @@
 <?php
 
+use SilverStripeAustralia\ContentServiceAssets\ContentServiceAsset;
+
 /**
  * Subclass that overwrites specific behaviour of Image 
  * 
@@ -40,6 +42,26 @@ class CdnImage extends Image {
 		}
 
 		return call_user_func_array('parent::getFormattedImage', $args);
+	}
+    
+    /**
+     * 
+     * Deletes all content service asset representations of this item, which will mean they regenerate later
+     * 
+     * @return int
+     */
+    public function deleteFormattedImages() {
+		if(!$this->Filename) return 0;
+
+		$children = ContentServiceAsset::get()->filter('SourceID', $this->ID);
+        
+        $numDeleted = 0;
+        foreach ($children as $child) {
+            $child->delete();
+            $numDeleted++;
+        }
+
+		return $numDeleted;
 	}
     
     public function getDimensions($dim = "string") {

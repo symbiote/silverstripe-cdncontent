@@ -22,6 +22,7 @@ class CdnImage extends Image {
 			$cacheFile = call_user_func_array(array($this, "cacheFilename"), $args);
 			
 			if(!file_exists(Director::baseFolder()."/".$cacheFile) || isset($_GET['flush'])) {
+                $this->downloadFromContentService();
 				call_user_func_array(array($this, "generateFormattedImage"), $args);
 			}
 			

@@ -14,6 +14,8 @@ class CDNFile extends DataExtension {
         
         'FileSize'          => 'Int',
         'ImageDim'          => 'Varchar',
+        
+        'Resamplings'       => 'MultiValueField',
 	);
 	
 	private static $dependencies = array(
@@ -96,7 +98,7 @@ class CDNFile extends DataExtension {
 	 * @return null
 	 */
 	public function updateURL(&$url) {
-		if($this->owner instanceof \Image_Cached) {
+		if($this->owner instanceof \Image_Cached || $this->owner instanceof \CdnImage_Cached) {
 			return; /** handled in @link ImageCachedExtension */
 		}
 
@@ -143,7 +145,7 @@ class CDNFile extends DataExtension {
 	 * @return String URL pointing the the resource
 	 */
 	public function getSecureURL($expires = 60) {
-		if($this->owner instanceof \Image_Cached) {
+		if($this->owner instanceof \Image_Cached || $this->owner instanceof \CdnImage_Cached) {
 			return;
 		}
 

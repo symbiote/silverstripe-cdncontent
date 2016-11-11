@@ -23,6 +23,9 @@ name: extensions
 Image_Cached:
   extensions:
     - SilverStripeAustralia\ContentServiceAssets\ImageCachedExtension
+CdnImage_Cached:
+  extensions:
+    - SilverStripeAustralia\ContentServiceAssets\ImageCachedExtension
 Controller:
   extensions:
     - CdnControllerExtension

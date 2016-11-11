@@ -17,16 +17,34 @@ class CdnImage extends Image {
 		$args = func_get_args();
 		
 		$pointer = $this->obj('CDNFile');
+        
+        $samplePointer = null;
 		
 		if($this->ID && $this->Filename && $pointer->exists()) {
 			$cacheFile = call_user_func_array(array($this, "cacheFilename"), $args);
+            $sampleName = basename($cacheFile);
+            $resamples = $this->Resamplings->getValues();
+            $samplePointer = isset($resamples[$sampleName]) ? $resamples[$sampleName] : null;
 			
-			if(!file_exists(Director::baseFolder()."/".$cacheFile) || isset($_GET['flush'])) {
-                $this->downloadFromContentService();
-				call_user_func_array(array($this, "generateFormattedImage"), $args);
-			}
+            if (!$samplePointer) {
+                // regenerate if needed
+                if(!file_exists(Director::baseFolder()."/".$cacheFile) || isset($_GET['flush'])) {
+                    $this->downloadFromContentService();
+                    call_user_func_array(array($this, "generateFormattedImage"), $args);
+                }
+                
+                // now create the content service asset
+                if (file_exists(Director::baseFolder()."/".$cacheFile)) {
+                    $existing = $this->createResampledAsset($cacheFile);
+
+                    $samplings = $this->Resamplings->getValues();
+                    $samplings[$sampleName] = $samplePointer = $existing->FilePointer;
+                    $this->Resamplings = $samplings;
+                    $this->write();
+                }
+            }
 			
-			$cached = new Image_Cached($cacheFile);
+			$cached = new CdnImage_Cached($cacheFile);
             
 			// Pass through the title so the templates can use it
 			$cached->Title = $this->Title;
@@ -39,11 +57,60 @@ class CdnImage extends Image {
             
             $cached->SourceID = $this->ID;
             
+            $cached->ResampledPointer = $samplePointer;
+            
 			return $cached;
 		}
 
 		return call_user_func_array('parent::getFormattedImage', $args);
 	}
+    
+    /**
+     * Creates a content service asset object based on a given resampled file path
+     * 
+     * @param type $filename
+     * @return ContentServiceAsset
+     */
+    protected function createResampledAsset($filename) {
+        $fullpath = Director::baseFolder() . '/' . $filename;
+        $asset = ContentServiceAsset::get()->filter('Filename', $filename)->first();
+
+		if(!$asset) {
+            $asset = new ContentServiceAsset();
+        }
+        
+        $this->service = singleton('ContentService');
+
+
+        $asset->Filename = $filename;
+        $asset->SourceID = $this->ID;
+        $asset->ParentID = $this->ParentID;
+        $mtime = time();
+
+        $writer = $this->service->getWriterFor($asset, 'FilePointer', $this->targetStore());
+        if ($writer) {
+            if (file_exists($fullpath)) {
+                // likely that cached image never got built correctly. 
+                $name = \Controller::join_links(dirname($filename), $mtime, basename($filename));
+                $writer->write(fopen($fullpath, 'r'), $name);
+
+                $asset->FilePointer = $writer->getContentId();
+                $asset->write();
+
+                $reader = $writer->getReader();
+                if ($reader && $reader->exists()) {
+                    @unlink($fullpath);
+                    
+                }
+            } else {
+                $asset = null;
+            }
+        } else {
+            $asset = null;
+        }
+
+        return $asset;
+    }
     
     /**
      * 
@@ -61,6 +128,8 @@ class CdnImage extends Image {
             $child->delete();
             $numDeleted++;
         }
+        
+        $this->Resamplings = [];
 
 		return $numDeleted;
 	}
@@ -118,5 +187,61 @@ class CdnImage extends Image {
 		}
 
 		return $fields;
+	}
+}
+
+
+/**
+ * A resized / processed {@link Image} object.
+ * When Image object are processed or resized, a suitable Image_Cached object is returned, pointing to the
+ * cached copy of the processed image.
+ *
+ * @package framework
+ * @subpackage filesystem
+ */
+class CdnImage_Cached extends CdnImage {
+
+	/**
+	 * Create a new cached image.
+	 * @param string $filename The filename of the image.
+	 * @param boolean $isSingleton This this to true if this is a singleton() object, a stub for calling methods.
+	 *                             Singletons don't have their defaults set.
+	 */
+	public function __construct($filename = null, $isSingleton = false) {
+		parent::__construct(array(), $isSingleton);
+		$this->ID = -1;
+		$this->Filename = $filename;
+	}
+
+	/**
+	 * Override the parent's exists method becuase the ID is explicitly set to -1 on a cached image we can't use the
+	 * default check
+	 *
+	 * @return bool Whether the cached image exists
+	 */
+	public function exists() {
+		return !is_null($this->ResampledPointer);
+	}
+
+	public function getRelativePath() {
+		return $this->getField('Filename');
+	}
+
+	/**
+	 * Prevent creating new tables for the cached record
+	 *
+	 * @return false
+	 */
+	public function requireTable() {
+		return false;
+	}
+
+	/**
+	 * Prevent writing the cached image to the database
+	 *
+	 * @throws Exception
+	 */
+	public function write($showDebug = false, $forceInsert = false, $forceWrite = false, $writeComponents = false) {
+		throw new Exception("{$this->ClassName} can not be written back to the database.");
 	}
 }

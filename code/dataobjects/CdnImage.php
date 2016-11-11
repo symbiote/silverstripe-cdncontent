@@ -130,6 +130,7 @@ class CdnImage extends Image {
         }
         
         $this->Resamplings = [];
+        $this->write();
 
 		return $numDeleted;
 	}

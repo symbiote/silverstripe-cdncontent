@@ -33,7 +33,9 @@ class ImageBackendFactory implements Factory {
 			if ($file) {
 				$file->downloadFromContentService();
                 $this->cleanupFiles[] = $file->getFullPath();
-			}
+			} else {
+                $o = 1;
+            }
 		}
 
 		$reflector = new ReflectionClass($this->backend);

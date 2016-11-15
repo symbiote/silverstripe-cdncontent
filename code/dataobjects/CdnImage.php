@@ -243,6 +243,6 @@ class CdnImage_Cached extends CdnImage {
 	 * @throws Exception
 	 */
 	public function write($showDebug = false, $forceInsert = false, $forceWrite = false, $writeComponents = false) {
-		throw new Exception("{$this->ClassName} can not be written back to the database.");
+        return;
 	}
 }

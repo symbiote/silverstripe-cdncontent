@@ -112,6 +112,12 @@ class CdnImage extends Image {
         return $asset;
     }
     
+    public function onBeforeWrite()
+    {
+        parent::onBeforeWrite();
+        $this->deleteResamplings();
+    }
+    
     /**
      * 
      * Deletes all content service asset representations of this item, which will mean they regenerate later
@@ -121,20 +127,41 @@ class CdnImage extends Image {
     public function deleteFormattedImages() {
 		if(!$this->Filename) return 0;
 
-		$children = ContentServiceAsset::get()->filter('SourceID', $this->ID);
-        
-        $numDeleted = 0;
-        foreach ($children as $child) {
-            $child->delete();
-            $numDeleted++;
-        }
-        
-        $this->Resamplings = [];
+		$numDeleted = $this->deleteResamplings();
         $this->write();
 
 		return $numDeleted;
 	}
     
+    /**
+     * Mark content service assets as being deleted, and reset our Resamplings value
+     * for update later
+     * 
+     * @return int
+     */
+    protected function deleteResamplings() {
+        $children = ContentServiceAsset::get()->filter('SourceID', $this->ID);
+        
+        $numDeleted = 0;
+        foreach ($children as $child) {
+            $child->SourceID = -1;
+            
+            // we _DONT_ do a hard delete; if content has this image cached, it should be able to
+            // hold it for a while. Instead, mark deleted and allow a cleanup job to collect it later
+            $child->Filename = 'deleted';
+            $child->write();
+            $numDeleted++;
+        }
+        
+        $this->Resamplings = [];
+        return $numDeleted;
+    }
+    
+    /**
+     * Captures the image dimensions in a db field to avoid needing to download the file all the time
+     * @param type $dim
+     * @return string
+     */
     public function getDimensions($dim = "string") {
         if ($this->ImageDim && strlen($this->ImageDim) > 1) {
             if ($dim == 'string') {

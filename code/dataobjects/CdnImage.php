@@ -115,7 +115,12 @@ class CdnImage extends Image {
     public function onBeforeWrite()
     {
         parent::onBeforeWrite();
-        $this->deleteResamplings();
+        $changed = $this->getChangedFields(false, DataObject::CHANGE_VALUE);
+        
+        if (isset($changed['Name']) || isset($changed['Title'])) {
+            // we want to store the new sampled values
+            $this->deleteResamplings();
+        }
     }
     
     /**

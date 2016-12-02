@@ -32,6 +32,9 @@ class CDNFile extends DataExtension {
 	 * @return ContentReader
 	 */
 	public function reader() {
+		if ($this->owner instanceof Folder) {
+			return null;
+		}
 		$pointer = $this->owner->obj('CDNFile');
 		if ($pointer && $pointer->getValue()) {
 			return $pointer->getReader();
@@ -42,12 +45,15 @@ class CDNFile extends DataExtension {
 	 * @return ContentWriter
 	 */
 	public function writer() {
-		if ($reader = $this->reader()) {
+		if ($this->owner instanceof Folder) {
+			return null;
+		}
+		$reader = $this->reader();
+		if ($reader) {
 			return $reader->getWriter();
 		}
 
 		$writer = null;
-
 		if ($this->owner->ParentID) {
 			$writer = $this->owner->Parent()->getCDNWriter();
 		} else {
@@ -246,74 +252,99 @@ class CDNFile extends DataExtension {
 			if ($reader) {
                 $p = $this->owner->getFullPath();
                 Filesystem::makeFolder(dirname($p));
+
+                $result = false;
                 try {
-                    file_put_contents($p, $pointer->getReader()->read());
+                    $result = (file_put_contents($p, $pointer->getReader()->read()) !== FALSE);
                 } catch (Exception $ex) {
                     // okay, make sure the local file is removed
                     if (file_exists($p) && filesize($p) == 0) {
                         @unlink($p);
                     }
                 }
+                return $result;
 			}
 		}
+		return false;
 	}
 
 	/**
 	 * Upload this content asset to the configured CDN
 	 */
 	public function uploadToContentService() {
+		/** @var \File $file */
 		$file = $this->owner;
-		if (!($file instanceof Folder) && $writer = $this->writer()) {
-			/** @var \File $file */
-			
-			$path = $file->getFullPath();
-			if (strlen($path) && is_file($path) && file_exists($path)) {
-
-				$mtime = @filemtime($path);
-                $name = trim($file->getFilename(), '/');
-                if ($lastPos = strrpos($name, '/')) {
-                    $name = substr($name, 0, $lastPos) . '/' . $mtime . substr($name, $lastPos);
-                }
-                
-				$writer->write(fopen($path, 'r'), $name);
-
-				// writer should now have an id
-				$file->CDNFile = $writer->getContentId();
-                $file->FileSize = @filesize($path);
-                
-                // check whether it's an image, and handle its dimensions
-                if ($file instanceof CdnImage) {
-                    $file->storeDimensions();
-                }
-                
-				$file->write();
-                
-                // confirm the remote upload is there, and delete the local file
-                // Oct 2016 - UNLESS the versioned files extension is on, we have to treat it slightly different
-                $reader = $writer->getReader();
-                if ($reader && $reader->exists()) {
-                    // check if we're a file with versioned on, we need to check the presence of the VersionNumber
-                    // before deleting
-                    if ($this->owner instanceof FileVersion) {
-                        @unlink($path);
-                        
-                        // and the _parent_ file?
-                        $parentFile = $this->owner->File();
-                        if ($file->VersionNumber > 1 && $parentFile && $parentFile->ID && file_exists($parentFile->getFullPath())) {
-                            @unlink($parentFile->getFullPath());
-                        }
-                    } else {
-                        // if it's a versioned file, and NOT just created (ie lastEdited == Created), we do NOT 
-                        // delete. That's handled by the above version creation code
-                        if ($this->owner->hasExtension('VersionedFileExtension') && ($this->owner->LastEdited != $this->owner->Created)) {
-                            
-                        } else {
-                            @unlink($path);
-                        }
-                    }
-                }
-			}
+		$writer = $this->writer();
+		if (!$writer) {
+			return;
 		}
+		$path = $file->getFullPath();
+		if (strlen($path) && is_file($path) && file_exists($path)) {
+
+			$mtime = @filemtime($path);
+            $name = trim($file->getFilename(), '/');
+            if ($lastPos = strrpos($name, '/')) {
+                $name = substr($name, 0, $lastPos) . '/' . $mtime . substr($name, $lastPos);
+            }
+            
+			$writer->write(fopen($path, 'r'), $name);
+
+			// writer should now have an id
+			$file->CDNFile = $writer->getContentId();
+            $file->FileSize = @filesize($path);
+            
+            // check whether it's an image, and handle its dimensions
+            if ($file instanceof CdnImage) {
+                $file->storeDimensions();
+            }
+            
+			$file->write();
+            
+            // confirm the remote upload is there, and delete the local file
+            // Oct 2016 - UNLESS the versioned files extension is on, we have to treat it slightly different
+            $this->deleteLocalIfExistsOnContentService();
+		}
+	}
+
+	/**
+	 * Added so that a file can be brought down from CDN to be manipulated/examined and then
+	 * removed safely if it already exists on CDN.
+	 */
+	public function deleteLocalIfExistsOnContentService() {
+		/** @var \File $file */
+		$file = $this->owner;
+		$writer = $this->writer();
+		if (!$writer) {
+			return;
+		}
+		// confirm the remote upload is there, and delete the local file
+        // Oct 2016 - UNLESS the versioned files extension is on, we have to treat it slightly different
+        $reader = $writer->getReader();
+        if (!$reader || !$reader->exists()) {
+        	return;
+        }
+        $path = $file->getFullPath();
+		if (strlen($path) && is_file($path) && file_exists($path)) {
+	        // check if we're a file with versioned on, we need to check the presence of the VersionNumber
+	        // before deleting
+	        if ($this->owner instanceof FileVersion) {
+	            @unlink($path);
+	            
+	            // and the _parent_ file?
+	            $parentFile = $this->owner->File();
+	            if ($file->VersionNumber > 1 && $parentFile && $parentFile->ID && file_exists($parentFile->getFullPath())) {
+	                @unlink($parentFile->getFullPath());
+	            }
+	        } else {
+	            // if it's a versioned file, and NOT just created (ie lastEdited == Created), we do NOT 
+	            // delete. That's handled by the above version creation code
+	            if ($this->owner->hasExtension('VersionedFileExtension') && ($this->owner->LastEdited != $this->owner->Created)) {
+	                
+	            } else {
+	                @unlink($path);
+	            }
+	        }
+	    }
 	}
 
 	public function updateCMSFields(\FieldList $fields) {

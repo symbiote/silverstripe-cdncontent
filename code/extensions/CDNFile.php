@@ -332,7 +332,12 @@ class CDNFile extends DataExtension {
 	            
 	            // and the _parent_ file?
 	            $parentFile = $this->owner->File();
-	            if ($file->VersionNumber > 1 && $parentFile && $parentFile->ID && file_exists($parentFile->getFullPath())) {
+				if ($file->VersionNumber > 1
+					&& $parentFile
+					&& $parentFile->ID
+					&& $parentFile->CDNFile
+					&& file_exists($parentFile->getFullPath())
+				) {
 	                @unlink($parentFile->getFullPath());
 	            }
 	        } else {

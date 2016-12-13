@@ -40,7 +40,14 @@ class CdnImage extends Image {
                     $samplings = $this->Resamplings->getValues();
                     $samplings[$sampleName] = $samplePointer = $existing->FilePointer;
                     $this->Resamplings = $samplings;
-                    $this->write();
+                    try {
+                        $this->write();
+                    } catch (ValidationException $e) {
+                        // Stops a CMS page from erroring if the file suddenly starts
+                        // failing validation.
+                        // ie. ClamAV detected a virus in File::validate()
+                        SS_Log::log($e, SS_Log::WARN);
+                    }
                 }
             }
 			

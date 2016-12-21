@@ -143,7 +143,7 @@ class ResampledFileExtension extends \DataExtension {
 
                 $reader = $writer->getReader();
                 if ($reader && $reader->exists()) {
-                    @unlink($fullPath);
+                    singleton('ContentDeliveryService')->removeLocalFile($fullPath);
                 }
 			}
 		}

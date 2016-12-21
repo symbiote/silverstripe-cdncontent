@@ -259,7 +259,7 @@ class CDNFile extends DataExtension {
                 } catch (Exception $ex) {
                     // okay, make sure the local file is removed
                     if (file_exists($p) && filesize($p) == 0) {
-                        @unlink($p);
+                        singleton('ContentDeliveryService')->removeLocalFile($p);
                     }
                 }
                 return $result;
@@ -328,26 +328,19 @@ class CDNFile extends DataExtension {
 	        // check if we're a file with versioned on, we need to check the presence of the VersionNumber
 	        // before deleting
 	        if ($this->owner instanceof FileVersion) {
-	            @unlink($path);
+	            singleton('ContentDeliveryService')->removeLocalFile($path);
 	            
 	            // and the _parent_ file?
 	            $parentFile = $this->owner->File();
-				if ($file->VersionNumber > 1
-					&& $parentFile
+				if ($parentFile
 					&& $parentFile->ID
 					&& $parentFile->CDNFile
 					&& file_exists($parentFile->getFullPath())
 				) {
-	                @unlink($parentFile->getFullPath());
+	                singleton('ContentDeliveryService')->removeLocalFile($parentFile->getFullPath());
 	            }
 	        } else {
-	            // if it's a versioned file, and NOT just created (ie lastEdited == Created), we do NOT 
-	            // delete. That's handled by the above version creation code
-	            if ($this->owner->hasExtension('VersionedFileExtension') && ($this->owner->LastEdited != $this->owner->Created)) {
-	                
-	            } else {
-	                @unlink($path);
-	            }
+	            singleton('ContentDeliveryService')->removeLocalFile($path);
 	        }
 	    }
 	}

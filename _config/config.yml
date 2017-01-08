@@ -13,10 +13,14 @@ Injector:
       contentFilter: %$AssetUrlFilter
   AssetUrlFilter:
     class: AssetUrlConversionFilter
+  FileCleanupFilter:
+    properties:
+      contentDelivery: %$ContentDeliveryService
   RequestProcessor:
     properties:
       filters: 
         - %$AssetUrlFilter
+        - %$FileCleanupFilter
 ---
 name: extensions
 ---

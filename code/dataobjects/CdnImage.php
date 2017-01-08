@@ -33,6 +33,7 @@ class CdnImage extends Image {
             if(!file_exists(Director::baseFolder()."/".$cacheFile) || isset($_GET['flush'])) {
                 $this->downloadFromContentService();
                 call_user_func_array(array($this, "generateFormattedImage"), $args);
+                singleton('ContentDeliveryService')->removeLocalFile($this->getFullPath());
             }
             
             // now create the content service asset
@@ -105,8 +106,7 @@ class CdnImage extends Image {
 
                 $reader = $writer->getReader();
                 if ($reader && $reader->exists()) {
-                    @unlink($fullpath);
-                    
+                    singleton('ContentDeliveryService')->removeLocalFile($fullpath);
                 }
             } else {
                 $asset = null;

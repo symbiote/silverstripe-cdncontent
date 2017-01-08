@@ -15,10 +15,24 @@ class ContentDeliveryService {
 	 */
 	public $contentService;
 	
-	
+    private $cleanupFiles = array();
+    
 	public static $dependencies = array(
 		'contentService'		=> '%$ContentService'
 	);
+    
+    public function removeLocalFile($filepath) {
+        $this->cleanupFiles[] = $filepath;
+    }
+    
+    public function cleanup()
+    {
+        foreach ($this->cleanupFiles as $path) {
+            if (file_exists($path)) {
+                @unlink($path);
+            }
+        }
+    }
 	
 	/**
 	 * Get the first available CDN for a given theme

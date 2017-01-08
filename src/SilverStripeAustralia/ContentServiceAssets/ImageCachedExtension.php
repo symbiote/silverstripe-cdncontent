@@ -57,14 +57,14 @@ class ImageCachedExtension extends \DataExtension {
                         // @TODO Cleanup local system copy; see note further below
                         $reader = $writer->getReader();
                         if ($reader && $reader->exists()) {
-                            @unlink($cached->getFullPath());
+                            singleton('ContentDeliveryService')->removeLocalFile($cached->getFullPath());
                         }
 
                         $asset->write();
 
                         $reader = $writer->getReader();
                         if ($reader && $reader->exists()) {
-                            @unlink($cached->getFullPath());
+                            singleton('ContentDeliveryService')->removeLocalFile($cached->getFullPath());
                         }
                     } else {
                         $asset = null;

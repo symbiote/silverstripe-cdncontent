@@ -14,63 +14,62 @@ use SilverStripeAustralia\ContentServiceAssets\ContentServiceAsset;
 class CdnImage extends Image {
     
 	public function getFormattedImage($format) {
-		$args = func_get_args();
-		
-		$pointer = $this->obj('CDNFile');
-        
-        $samplePointer = null;
-		
-		if($this->ID && $this->Filename && $pointer->exists()) {
-			$cacheFile = call_user_func_array(array($this, "cacheFilename"), $args);
-            $sampleName = basename($cacheFile);
-            $resamples = $this->Resamplings->getValues();
-            $samplePointer = isset($resamples[$sampleName]) ? $resamples[$sampleName] : null;
-			
-            if (!$samplePointer) {
-                // regenerate if needed
-                if(!file_exists(Director::baseFolder()."/".$cacheFile) || isset($_GET['flush'])) {
-                    $this->downloadFromContentService();
-                    call_user_func_array(array($this, "generateFormattedImage"), $args);
-                    singleton('ContentDeliveryService')->removeLocalFile($this->getFullPath());
-                }
-                
-                // now create the content service asset
-                if (file_exists(Director::baseFolder()."/".$cacheFile)) {
-                    $existing = $this->createResampledAsset($cacheFile);
+        $service = singleton('ContentService');
+        $pointer = $this->obj('CDNFile');
+        if (!$this->ID || !$this->getField('Filename') || !$pointer->exists() || !$service->getDefaultStore()) {
+            return call_user_func_array('parent::getFormattedImage', func_get_args());
+        }
+        $args = func_get_args();
 
-                    $samplings = $this->Resamplings->getValues();
-                    $samplings[$sampleName] = $samplePointer = $existing->FilePointer;
-                    $this->Resamplings = $samplings;
-                    try {
-                        $this->write();
-                    } catch (ValidationException $e) {
-                        // Stops a CMS page from erroring if the file suddenly starts
-                        // failing validation.
-                        // ie. ClamAV detected a virus in File::validate()
-                        SS_Log::log($e, SS_Log::WARN);
-                    }
+        $pointer = $this->obj('CDNFile');
+
+        $cacheFile = call_user_func_array(array($this, "cacheFilename"), $args);
+        $sampleName = basename($cacheFile);
+        $resamples = $this->Resamplings->getValues();
+        $samplePointer = isset($resamples[$sampleName]) ? $resamples[$sampleName] : null;
+
+        if (!$samplePointer) {
+            // regenerate if needed
+            if(!file_exists(Director::baseFolder()."/".$cacheFile) || isset($_GET['flush'])) {
+                $this->downloadFromContentService();
+                call_user_func_array(array($this, "generateFormattedImage"), $args);
+                singleton('ContentDeliveryService')->removeLocalFile($this->getFullPath());
+            }
+            
+            // now create the content service asset
+            if (file_exists(Director::baseFolder()."/".$cacheFile)) {
+                $existing = $this->createResampledAsset($cacheFile);
+
+                $samplings = $this->Resamplings->getValues();
+                $samplings[$sampleName] = $samplePointer = $existing->FilePointer;
+                $this->Resamplings = $samplings;
+                try {
+                    $this->write();
+                } catch (ValidationException $e) {
+                    // Stops a CMS page from erroring if the file suddenly starts
+                    // failing validation.
+                    // ie. ClamAV detected a virus in File::validate()
+                    SS_Log::log($e, SS_Log::WARN);
                 }
             }
-			
-			$cached = new CdnImage_Cached($cacheFile);
-            
-			// Pass through the title so the templates can use it
-			$cached->Title = $this->Title;
-			// Pass through the parent, to store cached images in correct folder.
-			$cached->ParentID = $this->ParentID;
-			//Pass through a CanViewType type if we have any so that it can be used for canView checks
-			$cached->CanViewType = $this->CanViewType;
-            // needed for mtime calcs
-            $cached->LastEdited = $this->LastEdited;
-            
-            $cached->SourceID = $this->ID;
-            
-            $cached->ResampledPointer = $samplePointer;
-            
-			return $cached;
-		}
+        }
 
-		return call_user_func_array('parent::getFormattedImage', $args);
+        $cached = new CdnImage_Cached($cacheFile);
+
+        // Pass through the title so the templates can use it
+        $cached->Title = $this->Title;
+        // Pass through the parent, to store cached images in correct folder.
+        $cached->ParentID = $this->ParentID;
+        //Pass through a CanViewType type if we have any so that it can be used for canView checks
+        $cached->CanViewType = $this->CanViewType;
+        // needed for mtime calcs
+        $cached->LastEdited = $this->LastEdited;
+
+        $cached->SourceID = $this->ID;
+
+        $cached->ResampledPointer = $samplePointer;
+
+        return $cached;
 	}
     
     /**

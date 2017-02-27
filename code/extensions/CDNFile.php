@@ -196,14 +196,43 @@ class CDNFile extends DataExtension {
      * Ensure update_filesystem is set to FALSE if we're writing something 
      * to do with a CDN File/Folder
      */
-    public function onBeforeWrite() {
+    public function onAfterWrite() {
+        $store = $this->targetStore();
+        if (strlen($store)) {
+            Config::inst()->update('File', 'update_filesystem', false);
+
+            // however, lets also ensure the changed filename file update check is run
+            // which is otherwise triggered by updateFilesystem
+            $changedFields = $this->owner->getChangedFields();
+            
+            if (isset($changedFields['Filename'])) {
+                $pathBefore = $changedFields['Filename']['before'];
+                $pathAfter = $changedFields['Filename']['after'];
+
+                if($pathBefore && $pathBefore != $pathAfter) {
+                    // update links call
+                    $this->owner->extend('updateLinks', $pathBefore, $pathAfter);
+                }
+            }
+
+
+        }
+        parent::onAfterWrite();
+    }
+
+
+    /**
+     * And if deleting don't do so
+     */
+    public function onBeforeDelete() {
         $store = $this->targetStore();
         if (strlen($store)) {
             Config::inst()->update('File', 'update_filesystem', false);
         }
-        parent::onBeforeWrite();
+
+		parent::onBeforeDelete();
     }
-    
+
 	public function onAfterDelete() {
 		if ($this->owner->ParentID && $this->owner->Parent()->getCDNStore() && !($this->owner instanceof Folder)) {
 			$obj = $this->owner->obj('CDNFile');

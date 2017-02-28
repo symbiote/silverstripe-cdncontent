@@ -24,7 +24,15 @@ class CdnImage extends Image {
         $pointer = $this->obj('CDNFile');
 
         $cacheFile = call_user_func_array(array($this, "cacheFilename"), $args);
+
         $sampleName = basename($cacheFile);
+        // need to detect the samplename for 3.2 (which is {base64}-filename.jpg) and >=3.3 which is {base64}/filename.jpg)
+        // strrpos(strrev($cacheFile), strrev("/$this->Name")) === 0) 
+        if ($sampleName === $this->Name) {
+            // we're actually of the format /path/to/file/{base64args}/filename.jpg in ss 3.3+
+            $sampleName = basename(dirname($cacheFile));
+        } 
+
         $resamples = $this->Resamplings->getValues();
         $samplePointer = isset($resamples[$sampleName]) ? $resamples[$sampleName] : null;
 

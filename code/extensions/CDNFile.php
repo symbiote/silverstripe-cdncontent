@@ -209,6 +209,10 @@ class CDNFile extends DataExtension {
                 $pathBefore = $changedFields['Filename']['before'];
                 $pathAfter = $changedFields['Filename']['after'];
 
+                if($this->owner instanceof Folder) {
+                    $this->updateChildFolderLinks($this->owner->Children(), $pathBefore, $pathAfter);
+                }
+
                 if($pathBefore && $pathBefore != $pathAfter) {
                     // update links call
                     $this->owner->extend('updateLinks', $pathBefore, $pathAfter);
@@ -220,6 +224,17 @@ class CDNFile extends DataExtension {
         parent::onAfterWrite();
     }
 
+    public function updateChildFolderLinks($children, $pathBefore, $pathAfter)
+    {
+		foreach($children as $child) {
+			if($child instanceof Folder) {
+				$child->Filename = $pathAfter.$child->Name.'/';
+			} else {
+				$child->Filename = $pathAfter.$child->Name;
+			}
+			$child->write();
+		}
+    }
 
     /**
      * And if deleting don't do so

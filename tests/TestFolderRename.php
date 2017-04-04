@@ -29,17 +29,18 @@ class TestFolderRename extends SapphireTest
 
 		$this->assertEquals('assets/TestFolder/ChildFolder/TestFile.txt', $tmpFile->Filename);
 
-		// $parentFolder = Folder::get()->byID($parentFolderID);
+		$parentFolder = Folder::get()->byID($parentFolderID);
 		$parentFolder->Name = "TestFolderRename";
 		$parentFolder->Title = "TestFolderRename";
 		$parentFolder->write();
 
 		$childFolder = $parentFolder->Children()->first();
-		$tmpFile = $childFolder->Children()->first();
 
 		$this->assertEquals('assets/TestFolderRename/', $parentFolder->Filename);
 		$this->assertEquals('assets/TestFolderRename/ChildFolder/', $childFolder->Filename);
-		$this->assertEquals('assets/TestFolderRename/ChildFolder/TestFile.txt', $tmpFile->Filename);
+		// Only enable this for in the future if it's decided that children file filenames should be renamed as well
+		// $tmpFile = $childFolder->Children()->first();
+		// $this->assertEquals('assets/TestFolderRename/ChildFolder/TestFile.txt', $tmpFile->Filename);
 
 		$newTmpFile = File::create();
 		$newTmpFile->Name = "NewTestFile.txt";
@@ -48,5 +49,9 @@ class TestFolderRename extends SapphireTest
 		$newTmpFile->write();
 
 		$this->assertEquals('assets/TestFolderRename/ChildFolder/NewTestFile.txt', $newTmpFile->Filename);
+
+		$childFolder = $parentFolder->Children()->first();
+		$fileCount = $childFolder->Children()->count();
+		$this->assertEquals(2, $fileCount);
 	}
 }

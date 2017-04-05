@@ -172,7 +172,7 @@ class CdnImage extends Image {
             $numDeleted++;
         }
         
-        $this->Resamplings = [];
+        $this->Resamplings = array();
         return $numDeleted;
     }
     

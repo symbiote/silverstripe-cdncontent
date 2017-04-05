@@ -1,7 +1,22 @@
 <?php
 
-class TestFolderRename extends SapphireTest
+class FolderRenameTest extends SapphireTest
 {
+	protected $usesDatabase = true;
+
+	public static function setUpBeforeClass()
+	{
+		if(!File::has_extension('CDNFile')) {
+			File::add_extension('CDNFile');
+		}
+
+		if(!Folder::has_extension('CDNFolder')) {
+			Folder::add_extension('CDNFolder');
+		}
+		
+		parent::setUpBeforeClass();
+	}
+
 	public function testFolderRenaming()
 	{
 		$parentFolder = Folder::create();
@@ -16,7 +31,7 @@ class TestFolderRename extends SapphireTest
 		$childFolder = Folder::create();
 		$childFolder->Name = "ChildFolder";
 		$childFolder->Title = "ChildFolder";
-		$childFolder->setParentID($parentFolder->ID);
+		$childFolder->setParentID($parentFolderID);
 		$childFolder->write();
 
 		$this->assertEquals('assets/TestFolder/ChildFolder/', $childFolder->Filename);
@@ -53,5 +68,6 @@ class TestFolderRename extends SapphireTest
 		$childFolder = $parentFolder->Children()->first();
 		$fileCount = $childFolder->Children()->count();
 		$this->assertEquals(2, $fileCount);
+
 	}
 }

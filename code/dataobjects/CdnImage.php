@@ -31,9 +31,25 @@ class CdnImage extends Image {
         if ($sampleName === $this->Name) {
             // we're actually of the format /path/to/file/{base64args}/filename.jpg in ss 3.3+
             $sampleName = basename(dirname($cacheFile));
-        } 
+        }
 
+        // get current state; it may be wiped soon if our parent folder has changed
         $resamples = $this->Resamplings->getValues();
+
+        // sometimes our parent may have changed, in which case the resamplings need to be wiped out and regenerated
+        $parentPath = trim(substr($cacheFile, 0, strpos($cacheFile, '_resampled')), "/");
+        $currentParent = trim(dirname($this->Filename), "/");
+        if ($parentPath && $parentPath != $currentParent) {
+            // okay, we're needing to rebuild our filename. This will trigger a delete of the
+            // associated samples
+            $newPath = trim($this->Parent()->Filename, '/') . '/' . $this->Name;
+            $this->setFilename($newPath);
+            $this->write();
+            
+            $this->Resamplings = array();
+            $resamples = array();
+        }
+
         $samplePointer = isset($resamples[$sampleName]) ? $resamples[$sampleName] : null;
 
         if (!$samplePointer) {

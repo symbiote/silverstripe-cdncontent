@@ -147,7 +147,7 @@ class CdnImage extends Image {
         parent::onBeforeWrite();
         $changed = $this->getChangedFields(false, DataObject::CHANGE_VALUE);
         
-        if (isset($changed['Name']) || isset($changed['Title'])) {
+        if (isset($changed['Name']) || isset($changed['Title']) || isset($changed['ParentID'])) {
             // we want to store the new sampled values
             $this->deleteResamplings();
         }

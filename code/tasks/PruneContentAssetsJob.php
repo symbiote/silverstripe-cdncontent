@@ -1,6 +1,6 @@
 <?php
 
-use \SilverStripeAustralia\ContentServiceAssets\ContentServiceAsset;
+use \Symbiote\ContentServiceAssets\ContentServiceAsset;
 
 if (class_exists('AbstractQueuedJob')) {
     

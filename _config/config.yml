@@ -26,10 +26,10 @@ name: extensions
 ---
 Image_Cached:
   extensions:
-    - SilverStripeAustralia\ContentServiceAssets\ImageCachedExtension
+    - Symbiote\ContentServiceAssets\ImageCachedExtension
 CdnImage_Cached:
   extensions:
-    - SilverStripeAustralia\ContentServiceAssets\ImageCachedExtension
+    - Symbiote\ContentServiceAssets\ImageCachedExtension
 Controller:
   extensions:
     - CdnControllerExtension
@@ -42,21 +42,21 @@ DatabaseAdmin:
 #
 #Upload:
 #  extensions:
-#    - SilverStripeAustralia\ContentServiceAssets\UploadExtension
+#    - Symbiote\ContentServiceAssets\UploadExtension
 
 ---
 name: injector
 ---
 Injector:
-  SilverStripeAustralia\ContentServiceAssets\ImageBackend:
-    factory: SilverStripeAustralia\ContentServiceAssets\ImageBackendFactory
-  SilverStripeAustralia\ContentServiceAssets\ImageBackendFactory:
+  Symbiote\ContentServiceAssets\ImageBackend:
+    factory: Symbiote\ContentServiceAssets\ImageBackendFactory
+  Symbiote\ContentServiceAssets\ImageBackendFactory:
     constructor:
       - "GDBackend"
-  SilverStripeAustralia\ContentServiceAssets\ImageCachedExtension:
+  Symbiote\ContentServiceAssets\ImageCachedExtension:
     constructor:
       - %$ContentService
-  SilverStripeAustralia\ContentServiceAssets\VersionedFileExtension:
+  Symbiote\ContentServiceAssets\VersionedFileExtension:
     constructor:
       - %$ContentService
 ---
@@ -66,7 +66,7 @@ only:
 ---
 FileVersion:
   extensions:
-    - SilverStripeAustralia\ContentServiceAssets\VersionedFileExtension
+    - Symbiote\ContentServiceAssets\VersionedFileExtension
 
 ---
 Name: cdn_image_settings

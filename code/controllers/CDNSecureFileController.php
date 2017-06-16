@@ -1,6 +1,6 @@
 <?php
 
-use SilverStripeAustralia\ContentServiceAssets\ContentServiceAsset;
+use Symbiote\ContentServiceAssets\ContentServiceAsset;
 
 /**
  * Handles requests to access a CDN file, checking if the file can be viewed given

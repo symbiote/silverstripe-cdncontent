@@ -1,6 +1,6 @@
 <?php
 
-namespace SilverStripeAustralia\ContentServiceAssets;
+namespace Symbiote\ContentServiceAssets;
 
 /**
  * A non-file asset which is served from an external content source.
@@ -20,7 +20,37 @@ class ContentServiceAsset extends \DataObject {
 	private static $indexes = array(
 		'Filename' => true
 	);
-    
+
+    /*
+     *  This automatically migrates any records from the previous namespace to the current namespace, since the
+     *  table names actually contain these.
+     */
+
+    public function requireDefaultRecords() {
+
+        parent::requireDefaultRecords();
+
+        // The tables to migrate.
+
+        $from = 'SilverStripeAustralia\ContentServiceAssets\ContentServiceAsset';
+        $to = 'Symbiote\ContentServiceAssets\ContentServiceAsset';
+        $escaped = 'Symbiote\\\\ContentServiceAssets\\\\ContentServiceAsset';
+
+        // This only ever needs to run once, so we need to do an efficient check here.
+
+        if(
+            !\DB::query("SELECT EXISTS(SELECT 1 FROM \"{$to}\" LIMIT 1);")->value() &&
+            \ClassInfo::hasTable($from) &&
+            \DB::query("SELECT EXISTS(SELECT 1 FROM \"{$from}\" LIMIT 1);")->value()
+        ) {
+
+            // Copy the records across, and make sure the class name is correct.
+
+            \DB::query("INSERT INTO \"{$to}\" SELECT * FROM \"{$from}\";");
+            \DB::query("UPDATE \"{$to}\" SET ClassName = '{$escaped}';");
+        }
+    }
+
     public function getSecureURL($expires = 60) {
 		
 		/** @var \FileContent $pointer */

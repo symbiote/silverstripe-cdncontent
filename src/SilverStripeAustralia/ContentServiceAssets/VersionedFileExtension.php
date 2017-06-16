@@ -1,6 +1,6 @@
 <?php
 
-namespace SilverStripeAustralia\ContentServiceAssets;
+namespace Symbiote\ContentServiceAssets;
 
 use ContentService;
 use DirectoryIterator;

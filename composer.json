@@ -1,5 +1,5 @@
 {
-	"name": "silverstripe/cdncontent",
+	"name": "symbiote/silverstripe-cdncontent",
 	"description": "A module that uses the content-services module for mapping Files and/or theme content from the CMS to compatible CDNs.",
 	"type": "silverstripe-module",
 	"keywords": ["silverstripe", "file", "themes", "cdn"],

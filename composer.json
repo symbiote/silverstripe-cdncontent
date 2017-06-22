@@ -12,8 +12,8 @@
 	],
 	"require":
 	{
-		"silverstripe/content-services": "~1.2",
-		"silverstripe/multivaluefield": "~2.0"
+		"symbiote/silverstripe-content-services": "~1.2",
+		"symbiote/silverstripe-multivaluefield": "~2.0"
 	},
 	"extra": {
 		"branch-alias": {

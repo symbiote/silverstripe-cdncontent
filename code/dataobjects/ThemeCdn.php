@@ -3,7 +3,7 @@
 /**
  * Wrapper around configuration for storing theme files in a CDN
  *
- * @author marcus@silverstripe.com.au
+ * @author marcus@symbiote.com.au
  * @license BSD License http://silverstripe.org/bsd-license/
  */
 class ThemeCdn extends DataObject {

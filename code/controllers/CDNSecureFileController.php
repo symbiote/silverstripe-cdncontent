@@ -6,7 +6,7 @@ use Symbiote\ContentServiceAssets\ContentServiceAsset;
  * Handles requests to access a CDN file, checking if the file can be viewed given
  * it's access settings. If successful it returns an expiring url for the resource
  *
- * @author Stephen McMahon <stephen@silverstripe.com.au>
+ * @author Stephen McMahon <stephen@symbiote.com.au>
  */
 class CDNSecureFileController extends Controller {
     

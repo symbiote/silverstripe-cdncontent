@@ -8,7 +8,7 @@ use Symbiote\ContentServiceAssets\ContentServiceAsset;
  * This class type is switched into place when someone saves an image that has
  * the CDNFile extension applied
  *
- * @author <marcus@silverstripe.com.au>
+ * @author <marcus@symbiote.com.au>
  * @license BSD License http://www.silverstripe.org/bsd-license
  */
 class CdnImage extends Image {

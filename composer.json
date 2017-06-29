@@ -19,5 +19,8 @@
 		"branch-alias": {
 			"dev-master": "3.0.x-dev"
 		}
+	},
+	"replace": {
+		"silverstripe/cdncontent": "self.version"
 	}
 }

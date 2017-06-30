@@ -16,6 +16,7 @@
 		"symbiote/silverstripe-multivaluefield": "~2.0"
 	},
 	"extra": {
+		"installer-name": "cdncontent",
 		"branch-alias": {
 			"dev-master": "3.0.x-dev"
 		}

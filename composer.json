@@ -12,8 +12,8 @@
 	],
 	"require":
 	{
-		"symbiote/silverstripe-content-services": "~1.2",
-		"symbiote/silverstripe-multivaluefield": "~2.0"
+		"symbiote/silverstripe-content-services": "~2.0",
+		"symbiote/silverstripe-multivaluefield": "~4.0"
 	},
 	"extra": {
 		"installer-name": "cdncontent",

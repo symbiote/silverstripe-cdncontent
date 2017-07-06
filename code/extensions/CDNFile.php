@@ -8,6 +8,7 @@
 class CDNFile extends DataExtension {
     
     const ANYONE_PERM = 'Anyone';
+	const MAX_FILE_PATH_LENGTH = 1024;
     
 	private static $db = array(
 		'CDNFile'			=> 'FileContent',
@@ -328,15 +329,15 @@ class CDNFile extends DataExtension {
 				$name = substr($name, 0, $lastPos) . '/' . $mtime . substr($name, $lastPos);
 			}
 			$fileKeyLength = strlen($name);
-			if ($fileKeyLength > 1024) {
+			if ($fileKeyLength > CDNFile::MAX_FILE_PATH_LENGTH) {
 				$lastPos = strrpos($name, '/');
 				$ext = substr($name, strrpos($name, '.'));
 				$filename = substr(substr($name, $lastPos + 1), 0, strrpos($name, '.'));
 				$filename = substr($filename, 0, strrpos($filename, '.'));
 				// add 1 here so we can add in a ~ to indictate truncation
-				$truncateLength = ($fileKeyLength + strlen($ext) + 1) - 1024;
+				$truncateLength = ($fileKeyLength + strlen($ext) + 1) - CDNFile::MAX_FILE_PATH_LENGTH;
 				if (strlen($filename) <= $truncateLength) {
-					// Folder length exceeds 1024. MD5 file to prevent file loss log error
+					// Folder length exceeds CDNFile::MAX_FILE_PATH_LENGTH. MD5 file to prevent file loss log error
 					SS_Log::log("CDNFile: Total file length (folders + name) exceeds 1024 characters and can't be "
 							. "trimmed. File key has been MD5 encoded. File key: " . md5($name) . $ext . " Filename: "
 							. "$name", SS_Log::ERR);

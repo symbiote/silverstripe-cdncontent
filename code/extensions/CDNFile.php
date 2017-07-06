@@ -324,10 +324,28 @@ class CDNFile extends DataExtension {
 
 			$mtime = @filemtime($path);
             $name = trim($file->getFilename(), '/');
-            if ($lastPos = strrpos($name, '/')) {
-                $name = substr($name, 0, $lastPos) . '/' . $mtime . substr($name, $lastPos);
-            }
-            
+			if ($lastPos = strrpos($name, '/')) {
+				$name = substr($name, 0, $lastPos) . '/' . $mtime . substr($name, $lastPos);
+			}
+			$fileKeyLength = strlen($name);
+			if ($fileKeyLength > 1024) {
+				$lastPos = strrpos($name, '/');
+				$ext = substr($name, strrpos($name, '.'));
+				$filename = substr(substr($name, $lastPos + 1), 0, strrpos($name, '.'));
+				$filename = substr($filename, 0, strrpos($filename, '.'));
+				// add 1 here so we can add in a ~ to indictate truncation
+				$truncateLength = ($fileKeyLength + strlen($ext) + 1) - 1024;
+				if (strlen($filename) <= $truncateLength) {
+					// Folder length exceeds 1024. MD5 file to prevent file loss log error
+					SS_Log::log("CDNFile: Total file length (folders + name) exceeds 1024 characters and can't be "
+							. "trimmed. File key has been MD5 encoded. File key: " . md5($name) . $ext . " Filename: "
+							. "$name", SS_Log::ERR);
+					$name = md5($name) . $ext;
+				} else {
+					$name = substr($name, 0, $lastPos) . '/' . substr($filename, $truncateLength) . '~' . $ext;
+				}
+			}
+
 			$writer->write(fopen($path, 'r'), $name);
 
 			// writer should now have an id

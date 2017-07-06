@@ -342,7 +342,7 @@ class CDNFile extends DataExtension {
 							. "$name", SS_Log::ERR);
 					$name = md5($name) . $ext;
 				} else {
-					$name = substr($name, 0, $lastPos) . '/' . substr($filename, $truncateLength) . '~' . $ext;
+					$name = substr($name, 0, $lastPos) . '/' . substr($filename, 0, (0 - $truncateLength)) . '~' . $ext;
 				}
 			}
 

@@ -325,24 +325,36 @@ class CDNFile extends DataExtension {
 
 			$mtime = @filemtime($path);
             $name = trim($file->getFilename(), '/');
+			//Insert the file modified time to make file unique-ish
 			if ($lastPos = strrpos($name, '/')) {
+				// Add in at as last folder name
 				$name = substr($name, 0, $lastPos) . '/' . $mtime . substr($name, $lastPos);
+			} else {
+				//No folder found create one for the mtime
+				$name = $mtime . '/' . $name;
 			}
+
 			$fileKeyLength = strlen($name);
 			if ($fileKeyLength > CDNFile::MAX_FILE_PATH_LENGTH) {
 				$lastPos = strrpos($name, '/');
-				$ext = substr($name, strrpos($name, '.'));
-				$filename = substr(substr($name, $lastPos + 1), 0, strrpos($name, '.'));
-				$filename = substr($filename, 0, strrpos($filename, '.'));
+				$ext = '';
+				$filename = substr($name, $lastPos + 1);
+				// Try and find a file extension
+				if (strrpos($name, '.') !== false) {
+					// Store and trim extension for later replacement
+					$ext = substr($name, strrpos($name, '.'));
+					$filename = substr($filename, 0, strrpos($filename, '.'));
+				}
 				// add 1 here so we can add in a ~ to indictate truncation
 				$truncateLength = ($fileKeyLength + strlen($ext) + 1) - CDNFile::MAX_FILE_PATH_LENGTH;
 				if (strlen($filename) <= $truncateLength) {
 					// Folder length exceeds CDNFile::MAX_FILE_PATH_LENGTH. MD5 file to prevent file loss log error
-					SS_Log::log("CDNFile: Total file length (folders + name) exceeds 1024 characters and can't be "
+					SS_Log::log("CDNFile: Total file length (folders + name) exceeds " . CDNFile::MAX_FILE_PATH_LENGTH . " characters and can't be "
 							. "trimmed. File key has been MD5 encoded. File key: " . md5($name) . $ext . " Filename: "
 							. "$name", SS_Log::ERR);
 					$name = md5($name) . $ext;
 				} else {
+					// Recombine folder and file name while truncating the filename and appending a ~ then extension
 					$name = substr($name, 0, $lastPos) . '/' . substr($filename, 0, (0 - $truncateLength)) . '~' . $ext;
 				}
 			}

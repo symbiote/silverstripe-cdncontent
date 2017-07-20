@@ -16,9 +16,6 @@
 		"silverstripe/multivaluefield": "~2.0"
 	},
 	"extra": {
-		"installer-name": "cdncontent",
-		"branch-alias": {
-			"dev-master": "2.7.x-dev"
-		}
+		"installer-name": "cdncontent"
 	}
 }

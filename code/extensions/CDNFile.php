@@ -325,6 +325,10 @@ class CDNFile extends DataExtension {
 
 			$mtime = @filemtime($path);
             $name = trim($file->getFilename(), '/');
+		if (!$mtime) {
+                    $mtime = '0';
+                }
+
 			//Insert the file modified time to make file unique-ish
 			if ($lastPos = strrpos($name, '/')) {
 				// Add in at as last folder name
@@ -358,6 +362,7 @@ class CDNFile extends DataExtension {
 					$name = substr($name, 0, $lastPos) . '/' . substr($filename, 0, (0 - $truncateLength)) . '~' . $ext;
 				}
 			}
+
 
 			$writer->write(fopen($path, 'r'), $name);
 
@@ -416,6 +421,46 @@ class CDNFile extends DataExtension {
 	        }
 	    }
 	}
+
+
+    /**
+     * Moves this file to its same path on the named CDN
+     * 
+     * @param string $newCdn
+     */
+    public function moveToCdn($newCdn) {
+        $reader = $this->reader();
+
+        // gets the _new_ writer
+        $writer = $this->getCDNWriter();
+
+        // hooking it to match the current cdn path. 
+        $writer->setId($reader->getId());
+        $writer->write($reader);
+
+        $this->owner->CDNFile = $writer->getContentId();
+        $this->owner->write();
+
+        // do the same for all versions
+        if ($this->owner->hasExtension('VersionedFileExtension')) {
+            foreach ($this->owner->Versions() as $version) {
+                if ($version->hasMethod('moveToCdn')) {
+                    try {
+                        $version->moveToCdn($newCdn);
+                    } catch (Exception $ex) {
+
+                    }
+                }
+            }
+        }
+
+        // delete source
+        $newReader = $writer->getReader();
+        if ($newReader->exists() && $newReader->getContentId() != $reader->getContentId()) {
+            $oldWriter = $reader->getWriter();
+            $oldWriter->delete();
+        }
+    }
 
 	public function updateCMSFields(\FieldList $fields) {
         

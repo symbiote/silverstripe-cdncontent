@@ -40,6 +40,16 @@ class ContentServiceAsset extends \DataObject {
 			}
 		}
 	}
+
+    /**
+	 * @return ContentReader
+	 */
+	public function reader() {
+		$pointer = $this->obj('FilePointer');
+		if ($pointer && $pointer->getValue()) {
+			return $pointer->getReader();
+		}
+	}
     
     public function getURL() {
         $pointer = $this->obj('FilePointer');

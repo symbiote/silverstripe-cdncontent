@@ -36,7 +36,7 @@ class ContentServiceAsset extends \DataObject {
                         return;
                     }
                 } 
-                return $reader->getSecureURL($expires);
+                return method_exists($reader, 'getSecureURL') ? $reader->getSecureURL($expires) : '';
 			}
 		}
 	}

@@ -205,8 +205,9 @@ class CDNFile extends DataExtension {
             // however, lets also ensure the changed filename file update check is run
             // which is otherwise triggered by updateFilesystem
             $changedFields = $this->owner->getChangedFields();
-            
-            if (isset($changedFields['Filename'])) {
+
+            // $this->owner->IgnorePathChanges gets set by the rename path job
+            if (isset($changedFields['Filename']) && !$this->owner->IgnorePathChanges && $this->owner instanceof File) {
                 $pathBefore = $changedFields['Filename']['before'];
                 $pathAfter = $changedFields['Filename']['after'];
 
@@ -214,14 +215,16 @@ class CDNFile extends DataExtension {
                     // update links call
                     $this->owner->extend('updateLinks', $pathBefore, $pathAfter);
 
-                    if($this->owner instanceof Folder) {
-                    	$children = Folder::get()->filter('ParentID', $this->owner->ID);
-	                    $this->updateChildFolderLinks($children, $pathBefore, $pathAfter);
-	                }
+                    $children = File::get()->filter('ParentID', $this->owner->ID);
+                    if ($children->count() > 0) {
+                        if (class_exists('QueuedJobService')) {
+                            singleton('QueuedJobService')->queueJob(new RenameFolderPathJob($this->owner, $children));
+                        } else {
+                            $this->updateChildFolderLinks($children, $pathBefore, $pathAfter);
+                        }
+                    }
                 }
             }
-
-
         }
         parent::onAfterWrite();
     }
@@ -229,8 +232,10 @@ class CDNFile extends DataExtension {
     public function updateChildFolderLinks($children, $pathBefore, $pathAfter)
     {
 		foreach($children as $child) {
-			$child->Filename = $pathAfter.$child->Name.'/';
-			$child->write();
+            if ($child instanceof Folder) {
+                $child->Filename = $pathAfter.$child->Name.'/';
+                $child->write();
+            }
 		}
     }
 

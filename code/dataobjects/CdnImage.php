@@ -3,16 +3,16 @@
 use Symbiote\ContentServiceAssets\ContentServiceAsset;
 
 /**
- * Subclass that overwrites specific behaviour of Image 
- * 
+ * Subclass that overwrites specific behaviour of Image
+ *
  * This class type is switched into place when someone saves an image that has
  * the CDNFile extension applied
  *
  * @author <marcus@symbiote.com.au>
  * @license BSD License http://www.silverstripe.org/bsd-license
  */
-class CdnImage extends Image {
-    
+class CdnImage extends \Image {
+
 	public function getFormattedImage($format) {
         $service = singleton('ContentService');
         $pointer = $this->obj('CDNFile');
@@ -21,13 +21,11 @@ class CdnImage extends Image {
         }
         $args = func_get_args();
 
-        $pointer = $this->obj('CDNFile');
-
         $cacheFile = call_user_func_array(array($this, "cacheFilename"), $args);
 
         $sampleName = basename($cacheFile);
         // need to detect the samplename for 3.2 (which is {base64}-filename.jpg) and >=3.3 which is {base64}/filename.jpg)
-        // strrpos(strrev($cacheFile), strrev("/$this->Name")) === 0) 
+        // strrpos(strrev($cacheFile), strrev("/$this->Name")) === 0)
         if ($sampleName === $this->Name) {
             // we're actually of the format /path/to/file/{base64args}/filename.jpg in ss 3.3+
             $sampleName = basename(dirname($cacheFile));
@@ -45,7 +43,7 @@ class CdnImage extends Image {
             $newPath = trim($this->Parent()->Filename, '/') . '/' . $this->Name;
             $this->setFilename($newPath);
             $this->write();
-            
+
             $this->Resamplings = array();
             $resamples = array();
         }
@@ -59,7 +57,7 @@ class CdnImage extends Image {
                 call_user_func_array(array($this, "generateFormattedImage"), $args);
                 singleton('ContentDeliveryService')->removeLocalFile($this->getFullPath());
             }
-            
+
             // now create the content service asset
             if (file_exists(Director::baseFolder()."/".$cacheFile)) {
                 $existing = $this->createResampledAsset($cacheFile);
@@ -95,10 +93,10 @@ class CdnImage extends Image {
 
         return $cached;
 	}
-    
+
     /**
      * Creates a content service asset object based on a given resampled file path
-     * 
+     *
      * @param type $filename
      * @return ContentServiceAsset
      */
@@ -109,7 +107,7 @@ class CdnImage extends Image {
 		if(!$asset) {
             $asset = new ContentServiceAsset();
         }
-        
+
         $this->service = singleton('ContentService');
 
 
@@ -121,7 +119,7 @@ class CdnImage extends Image {
         $writer = $this->service->getWriterFor($asset, 'FilePointer', $this->targetStore());
         if ($writer) {
             if (file_exists($fullpath)) {
-                // likely that cached image never got built correctly. 
+                // likely that cached image never got built correctly.
                 $name = \Controller::join_links(dirname($filename), $mtime, basename($filename));
                 $writer->write(fopen($fullpath, 'r'), $name);
 
@@ -141,22 +139,22 @@ class CdnImage extends Image {
 
         return $asset;
     }
-    
+
     public function onBeforeWrite()
     {
         parent::onBeforeWrite();
         $changed = $this->getChangedFields(false, DataObject::CHANGE_VALUE);
-        
+
         if (isset($changed['Name']) || isset($changed['Title']) || isset($changed['ParentID'])) {
             // we want to store the new sampled values
             $this->deleteResamplings();
         }
     }
-    
+
     /**
-     * 
+     *
      * Deletes all content service asset representations of this item, which will mean they regenerate later
-     * 
+     *
      * @return int
      */
     public function deleteFormattedImages() {
@@ -167,60 +165,91 @@ class CdnImage extends Image {
 
 		return $numDeleted;
 	}
-    
+
     /**
      * Mark content service assets as being deleted, and reset our Resamplings value
      * for update later
-     * 
+     *
      * @return int
      */
     protected function deleteResamplings() {
         $children = ContentServiceAsset::get()->filter('SourceID', $this->ID);
-        
+
         $numDeleted = 0;
         foreach ($children as $child) {
             $child->SourceID = -1;
-            
+
             // we _DONT_ do a hard delete; if content has this image cached, it should be able to
             // hold it for a while. Instead, mark deleted and allow a cleanup job to collect it later
             $child->Filename = 'deleted';
             $child->write();
             $numDeleted++;
         }
-        
+
         $this->Resamplings = array();
         return $numDeleted;
     }
-    
+
     /**
      * Captures the image dimensions in a db field to avoid needing to download the file all the time
+     *
      * @param type $dim
-     * @return string
+     * @return int|string
      */
     public function getDimensions($dim = "string") {
-        if ($this->ImageDim && strlen($this->ImageDim) > 1) {
-            if ($dim == 'string') {
-                return $this->ImageDim;
-            }
-            $parts = explode('x', $this->ImageDim);
-            return isset($parts[$dim]) ? $parts[$dim] : null;
+        if(!$this->getField('Filename')) {
+            return null;
         }
+
+        $imageDimensions = $this->getDimensionsFromDB($dim);
+        if ($imageDimensions !== null) {
+            return $imageDimensions;
+        }
+
+        // Download file from S3/CDN if we do not have dimensions stored in the DB
         $pointer = $this->obj('CDNFile');
-        if($this->ID && $this->Filename && $pointer->exists()) {
+        if($this->ID && $pointer->exists()) {
             $this->ensureLocalFile();
         }
-        
-        if ($this->localFileExists()) {
-            // make sure to save the dimensions for next time
-            $this->storeDimensions();
-            $this->write();
-            return parent::getDimensions($dim);
+
+        if (!$this->localFileExists()) {
+            return null;
         }
+
+        // Store in 'ImageDim' field and write if they've changed.
+        $this->storeDimensions();
+        if ($this->isChanged('ImageDim', \DataObject::CHANGE_VALUE)) {
+            $this->write();
+        }
+        // Load dimensions
+        return $this->getDimensionsFromDB($dim);
     }
-    
+
+    /**
+     * Get the dimensions of this Image.
+     *
+     * @param string $dim If this is equal to "string", return the dimensions in string form,
+     * if it is 0 return the height, if it is 1 return the width.
+     * @return string|int|null
+     */
+    private function getDimensionsFromDB($dim = "string") {
+        $imageDimensions = $this->ImageDim;
+        if (!$imageDimensions) {
+            return null;
+        }
+        if ($dim === 'string') {
+            return $imageDimensions;
+        }
+        $widthAndHeight = explode('x', $imageDimensions);
+        if (!isset($widthAndHeight[$dim])) {
+            return null;
+        }
+        return (int)$widthAndHeight[$dim];
+    }
+
     public function storeDimensions() {
         $size = getimagesize($this->getFullPath());
-        if (count($size)) {
+        if (count($size) > 0) {
             // store the size
             $this->ImageDim = $size[0] . 'x' . $size[1];
         }
@@ -239,7 +268,7 @@ class CdnImage extends Image {
 
 		$url = $this->Link();// 5 minute link expire
 		$link = ReadonlyField::create('CDNUrl', 'CDN reference',  $this->CDNFile);
-		
+
 		$link->dontEscape = true;
 
 		if ($top = $fields->fieldByName('Root.Main.FilePreview')) {

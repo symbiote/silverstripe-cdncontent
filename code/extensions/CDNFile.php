@@ -6,19 +6,19 @@
  * @license BSD License http://www.silverstripe.org/bsd-license
  */
 class CDNFile extends DataExtension {
-    
+
     const ANYONE_PERM = 'Anyone';
 	const MAX_FILE_PATH_LENGTH = 1024;
-    
+
 	private static $db = array(
 		'CDNFile'			=> 'FileContent',
-        
+
         'FileSize'          => 'Int',
         'ImageDim'          => 'Varchar',
-        
+
         'Resamplings'       => 'MultiValueField',
 	);
-	
+
 	private static $dependencies = array(
 		'contentService'		=> '%$ContentService',
 	);
@@ -28,7 +28,89 @@ class CDNFile extends DataExtension {
 	 * @var ContentService
 	 */
 	public $contentService;
-	
+
+    /**
+     * @return void
+     */
+    public function validate(ValidationResult $result) {
+        // Rename file if name is already taken in the CMS
+        if ($this->owner instanceof File &&
+            !Upload::config()->replaceFile &&
+            $this->owner->ID == 0) {
+
+            $pathBefore = $this->owner->getFilename();
+
+            // Get folder path
+            $relativeFolderPath = ASSETS_DIR . '/';
+            $parentFolder = $this->owner->Parent();
+            if ($parentFolder instanceof Folder) {
+                $relativeFolderPath = $parentFolder->getRelativePath();
+            }
+
+            // Get file info
+            $relativeFilePath = $this->owner->getFilename();
+            $fileName = $this->owner->Name;
+
+            $fileSuffixArray = explode('.', $fileName);
+            $fileTitle = array_shift($fileSuffixArray);
+            $fileSuffix = !empty($fileSuffixArray)
+                    ? '.' . implode('.', $fileSuffixArray)
+                    : null;
+
+            // NOTE: `while` logic copy pasted from framework's "Upload.php" file - 2017-10-12
+            while(File::get()->filter('Filename', $relativeFilePath)->count() > 0) {
+                $i = isset($i) ? ($i+1) : 2;
+                $oldFilePath = $relativeFilePath;
+
+                $prefix = Upload::config()->version_prefix;
+                $pattern = '/' . preg_quote($prefix) . '([0-9]+$)/';
+                if(preg_match($pattern, $fileTitle, $matches)) {
+                    $fileTitle = preg_replace($pattern, $prefix . ($matches[1] + 1), $fileTitle);
+                } else {
+                    $fileTitle .= $prefix . $i;
+                }
+                $relativeFilePath = $relativeFolderPath . $fileTitle . $fileSuffix;
+
+                if($oldFilePath == $relativeFilePath && $i > 2) {
+                    user_error("Couldn't fix $relativeFilePath with $i tries", E_USER_ERROR);
+                }
+            }
+
+            if ($pathBefore !== $relativeFilePath) {
+                $this->owner->setName(basename($relativeFilePath));
+
+                // Rename phyiscal file on disc (Taken from File::updateFilesystem, on 2017-10-12)
+                //
+                // NOTE: We have to do this manually as the file is only renamed when changes are
+                //       detected with $this->getChangedFields(), and this is happening to an
+                //       unwritten record.
+                //
+                $pathBeforeAbs = Director::getAbsFile($pathBefore);
+                $pathAfterAbs = Director::getAbsFile($relativeFilePath);
+
+                if(!file_exists($pathAfterAbs)) {
+                    if(!is_a($this, 'Folder')) {
+                        // Only throw a fatal error if *both* before and after paths don't exist.
+                        if(!file_exists($pathBeforeAbs)) {
+                            throw new Exception("Cannot move $pathBeforeAbs to $pathAfterAbs - $pathBeforeAbs doesn't exist");
+                        }
+
+                        // Check that target directory (not the file itself) exists.
+                        // Only check if we're dealing with a file, otherwise the folder will need to be created
+                        if(!file_exists(dirname($pathAfterAbs))) {
+                            throw new Exception("Cannot move $pathBeforeAbs to $pathAfterAbs - Directory " . dirname($pathAfter)
+                                . " doesn't exist");
+                        }
+                    }
+
+                    // Rename file or folder
+                    $success = rename($pathBeforeAbs, $pathAfterAbs);
+                    if(!$success) throw new Exception("Cannot move $pathBeforeAbs to $pathAfterAbs");
+                }
+            }
+        }
+    }
+
 	/**
 	 * @return ContentReader
 	 */
@@ -64,7 +146,7 @@ class CDNFile extends DataExtension {
 
 		return $writer;
 	}
-	
+
 	/**
 	 * Return the CDN store that this file should be stored into, based on its
 	 * parent setting, if no parent is found the ContentService default is returned
@@ -77,12 +159,12 @@ class CDNFile extends DataExtension {
 
 		return $this->contentService->getDefaultStore();
 	}
-    
+
     public function Size() {
         $size = $this->owner->FileSize;
         return ($size) ? File::format_size($size) : false;;
     }
-    
+
     /**
      * Handles FileVersion interaction
      */
@@ -91,7 +173,7 @@ class CDNFile extends DataExtension {
             return $this->owner->Parent()->getCDNStore();
         }
     }
-    
+
     public function getCDNWriter() {
         if ($this->owner->ParentID) {
             return $this->owner->Parent()->getCDNWriter();
@@ -100,7 +182,7 @@ class CDNFile extends DataExtension {
 
 	/**
 	 * Update the URL used for a file in various locations
-	 * 
+	 *
 	 * @param type $url
 	 * @return null
 	 */
@@ -109,22 +191,22 @@ class CDNFile extends DataExtension {
 			return; /** handled in @link ImageCachedExtension */
 		}
 
-        // in the CMS, we do _not_ change the asset 
+        // in the CMS, we do _not_ change the asset
         $controller = Controller::has_curr() ? Controller::curr() : null;
         if ($controller instanceof LeftAndMain) {
             return;
         }
-        
+
         if ($this->owner->CanViewType && $this->owner->getViewType() != CDNFile::ANYONE_PERM) {
             return;
         }
-        
+
         $cdnLink = $this->getCdnLink();
         if ($cdnLink) {
             $url = $cdnLink;
         }
 	}
-    
+
     public function getCdnLink() {
         $pointer = $this->owner->obj('CDNFile');
 
@@ -174,7 +256,7 @@ class CDNFile extends DataExtension {
 	 */
 	public function getViewType() {
         $perm = null;
-        
+
         if ($this->owner->CanViewType == 'Inherit') {
             if ($this->owner->ParentID) {
                 $perm = $this->owner->Parent()->getViewType();
@@ -189,12 +271,12 @@ class CDNFile extends DataExtension {
 		$default = Config::inst()->get('SecureAssets', 'Defaults');
 
 		$default = isset($default['Permission']) ? $default['Permission'] : CDNFile::ANYONE_PERM;
-        
+
         return $perm ? $perm : $default;
 	}
 
     /**
-     * Ensure update_filesystem is set to FALSE if we're writing something 
+     * Ensure update_filesystem is set to FALSE if we're writing something
      * to do with a CDN File/Folder
      */
     public function onAfterWrite() {
@@ -265,11 +347,11 @@ class CDNFile extends DataExtension {
 			}
 		}
 	}
-	
+
 	public function onAfterUpload() {
 		$this->uploadToContentService();
 	}
-    
+
     /**
      * Ensures there's a local assets path to the required file
      */
@@ -278,7 +360,7 @@ class CDNFile extends DataExtension {
 			$this->downloadFromContentService();
 		}
     }
-    
+
     public function localFileExists() {
     	if (!$this->owner->getField('Filename')) {
     		return false;
@@ -374,14 +456,14 @@ class CDNFile extends DataExtension {
 			// writer should now have an id
 			$file->CDNFile = $writer->getContentId();
             $file->FileSize = @filesize($path);
-            
+
             // check whether it's an image, and handle its dimensions
             if ($file instanceof CdnImage) {
                 $file->storeDimensions();
             }
-            
+
 			$file->write();
-            
+
             // confirm the remote upload is there, and delete the local file
             // Oct 2016 - UNLESS the versioned files extension is on, we have to treat it slightly different
             $this->deleteLocalIfExistsOnContentService();
@@ -411,7 +493,7 @@ class CDNFile extends DataExtension {
 	        // before deleting
 	        if ($this->owner instanceof FileVersion) {
 	            singleton('ContentDeliveryService')->removeLocalFile($path);
-	            
+
 	            // and the _parent_ file?
 	            $parentFile = $this->owner->File();
 				if ($parentFile
@@ -430,7 +512,7 @@ class CDNFile extends DataExtension {
 
     /**
      * Moves this file to its same path on the named CDN
-     * 
+     *
      * @param string $newCdn
      */
     public function moveToCdn($newCdn) {
@@ -439,7 +521,7 @@ class CDNFile extends DataExtension {
         // gets the _new_ writer
         $writer = $this->getCDNWriter();
 
-        // hooking it to match the current cdn path. 
+        // hooking it to match the current cdn path.
         $writer->setId($reader->getId());
         $writer->write($reader);
 
@@ -468,14 +550,14 @@ class CDNFile extends DataExtension {
     }
 
 	public function updateCMSFields(\FieldList $fields) {
-        
+
 		if ($file = $this->owner->obj('CDNFile')) {
 			$v = $file->getValue();
 			if (strlen($file->getValue())) {
 				$url = $file->URL();
 				$link = ReadonlyField::create('CDNUrl', 'CDN reference',  $v);
 				$link->dontEscape = true;
-				
+
 				if ($top = $fields->fieldByName('Root.Main.FilePreview')) {
 					$field = $top->fieldByName('FilePreviewData');
 					$holder = $field->fieldByName('');
@@ -486,14 +568,14 @@ class CDNFile extends DataExtension {
 					$fields->addFieldToTab('Root.Main', $link);
 				}
 			}
-            
+
             $sizeField = $fields->dataFieldByName('Size');
             if ($sizeField) {
                 $sizeField->setValue($filesize = $this->owner->Size());
             }
 		}
-        
-        
+
+
         $fields->removeByName('PreviousVersion');
 	}
 }

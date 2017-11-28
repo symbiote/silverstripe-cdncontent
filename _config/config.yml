@@ -81,6 +81,8 @@ File:
 Injector:
   Image:
     class: CdnImage
+  Image_Cached:
+    class: CdnImage_Cached
 
 ---
 Name: cdn_routes

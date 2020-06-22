@@ -7,35 +7,35 @@
 class CdnControllerExtension extends Extension {
 
 	static $store_type = 'File';
-	
+
 	/**
 	 *
 	 * @var ContentDeliveryService
 	 */
 	public $contentDelivery;
-	
+
 	/**
 	 *
-	 * @var ContentService 
+	 * @var ContentService
 	 */
 	public $contentService;
-    
+
     /**
      *
      * @var AssetUrlConversionFilter
      */
     public $contentFilter;
-	
+
 	protected $currentCdn;
 
 	public function requireCDN($assetPath, $uploadMissing = false, $verify = false) {
 		// return the cdn URL for the given asset
 		$type = strpos($assetPath, '.css')  ? 'css' : 'js';
 		switch ($type) {
-			case 'css': 
+			case 'css':
 				Requirements::css($this->CDNPath($assetPath, $uploadMissing, $verify));
 				break;
-			case 'js': 
+			case 'js':
 				Requirements::javascript($this->CDNPath($assetPath, $uploadMissing, $verify));
 				break;
 		}
@@ -45,7 +45,7 @@ class CdnControllerExtension extends Extension {
 		if (!$this->currentCdn) {
 			$this->currentCdn = $this->contentDelivery->getCdnForTheme(Config::inst()->get('SSViewer', 'theme'));
 		}
-		
+
 		return $this->currentCdn;
 	}
 
@@ -53,15 +53,15 @@ class CdnControllerExtension extends Extension {
 		$current = $this->currentThemeCdn();
 		if ($current && (Director::isLive() || (isset($_GET['stage']) && $_GET['stage'] == 'Live'))) {
 			$store = $current->StoreIn;
-			
-			// if we want to upload missing files, verify their existence. 
+
+			// if we want to upload missing files, verify their existence.
 			if (!$verify && $uploadMissing) {
 				$verify = true;
 			}
-			
+
 			$mtime = @filemtime(Director::baseFolder().'/'.$assetPath);
 			$timedAssetPath = ContentDeliveryService::CDN_THEME_PREFIX . '/' . $mtime . '/' . $assetPath;
-			
+
 			$reader = $this->contentService->findReaderFor($store, $timedAssetPath);
 			if ($reader && (!$verify || $reader->exists())) {
 				return $reader->getURL();
@@ -71,7 +71,7 @@ class CdnControllerExtension extends Extension {
 				if (strpos($assetPath, '.css')) {
 					// if we're a relative path, make absolute
 					$fullPath = $assetPath;
-					if ($assetPath{0} != '/') {
+					if ($assetPath[0] != '/') {
 						$fullPath = Director::baseFolder().'/' . $assetPath;
 					}
 					if (!file_exists($fullPath)) {
@@ -84,7 +84,7 @@ class CdnControllerExtension extends Extension {
 				// otherwise just upload
 				$writer = $this->getWriter();
 				// otherwise, we need to write the file
-				
+
 				$writer->write(Director::baseFolder().'/'.$assetPath, $timedAssetPath);
 
 				return $writer->getReader()->getURL();
@@ -104,7 +104,7 @@ class CdnControllerExtension extends Extension {
 		}
 		return $writer;
 	}
-    
+
     public function beforeCallActionHandler($request, $action) {
         if (
             $this->owner instanceof LeftAndMain ||
